@@ -1,0 +1,107 @@
+﻿@page "/"
+@inherits PartsGeneratorBase
+@rendermode InteractiveServer
+
+<PageTitle>Parts Generator</PageTitle>
+
+<HeadContent>
+    <meta name="description" content="Carpentry Parts Generator"
+</HeadContent>
+
+@if (Params == null)
+{
+    <DisplaySpinner />
+}
+else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+{
+    <DisplayError ErrorMessage="@ErrorMessage" />
+}
+else
+{
+    <h3 class="mb-5 text-center">Part Generator Page</h3>
+
+    <EditForm Model="@Params" OnSubmit="() => Calculate_Click(Params)" FormName="PartsGeneraorForm">
+        <div class="form-group col-md-2">
+            <label for="bladeThickness">Blade Thickness: </label>
+            <InputNumber @bind-Value="Params.BladeThickness" id="bladeThickness" class="form-control " />
+            <label for="bladeThickness">mm</label>
+        </div>
+
+        <div class="form-group  col-md-2">
+            <label for="direction">Direction</label>
+            <InputSelect @bind-Value="Params.Direction" id="direction" class="form-control main-input">
+                <option value="1">Vertical</option>
+                <option value="2">Horizontal</option>
+            </InputSelect>
+        </div>
+
+        <div class="form-group col-md-2">
+            <label for="total-width">Total Width: </label>
+            <InputNumber @bind-Value="Params.TotalWidth" id="total-width" class="form-control main-input" />
+            <label for="total-width">mm</label>
+        </div>
+
+        <div class="form-group col-md-2">
+            <label for="total-height">Total Height: </label>
+            <InputNumber @bind-Value="Params.TotalHeight" id="total-height" class="form-control main-input" />
+            <label for="total-height">mm</label>
+        </div>
+
+        <div class="form-group col-md-2">
+            <label for="hypotenuse-type">Hypotenuse Type</label>
+            <InputSelect @bind-Value="Params.HypotenuseType" id="hypotenuse-type" class="form-control main-input">
+                <option value="1">Interior</option>
+                <option value="2">Exterior</option>
+            </InputSelect>
+        </div>
+
+        <hr class="my-3" />
+        <div class="row">
+            <h2>Parts List</h2>
+            <div class="table-responsive">
+                <table class="table max-w-90">
+                    <thead>
+                        <tr>
+                            <th scope="col">Part Name</th>
+                            <th scope="col">Width (mm)</th>
+                            <th scope="col">Height (mm)</th>
+                            <th scope="col">Qty</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var part in PartList.Select((value, index) => new { value, index }))
+                        {
+                            <tr>
+                                <td><InputText @bind-Value="part.value.PartName" class="form-control" /></td>
+                                <td><InputNumber @bind-Value="part.value.PartWidth" class="form-control" /></td>
+                                <td><InputNumber @bind-Value="part.value.PartHeight" class="form-control" /></td>
+                                <td><InputNumber @bind-Value="part.value.PartQty" class="form-control" /></td>
+                                <td>
+                                    <div class="btn-group flex-wrap">
+                                        <button type="button" class="btn btn-secondary" @onclick="() => AddPart(part.value)">
+                                            <i class="fa-regular fa-square-plus"></i>&thinsp;Add
+                                        </button>
+                                        <button type="button" disabled="@CheckIfDeleteDisabled()" class="btn btn-danger" @onclick="() => DeletePart(part.value)">
+                                            <i class="fa-regular fa-trash-can"></i>&thinsp;Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <hr class="my-3" />
+        <div class="row justify-content-end">
+            <div class="col-12 col-sm-12 col-md-4 col-lg-3 col-xl-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fa-solid fa-square-root-variable"></i>&thinsp;Calculate
+                </button>
+            </div>
+        </div>
+        <hr class="my-3" />
+    </EditForm>
+
+}
