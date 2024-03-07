@@ -47,8 +47,6 @@
     }
 }
 
-
-
 export function setCanvasSize(canvasId, dotnet) {
     try {
         const canvas = document.getElementById(canvasId);
@@ -67,6 +65,10 @@ export function setCanvasSize(canvasId, dotnet) {
 
         canvas.width = maxWidth;
         canvas.height = maxHeight;
+
+        // Assuming you want to apply the zoom effect immediately after setting the canvas size
+        const ctx = canvas.getContext('2d');
+        applyCanvasZoom(ctx, 0.5); // Apply a 50% zoom out effect
     } catch (e) {
         handleError(e, dotnet);
     }
@@ -94,11 +96,35 @@ function calculateNextPosition(part, currentX, currentY, maxHeightInRow, boardOf
 }
 
 function drawPart(ctx, part, currentX, currentY, color) {
+    // Draw the part as before
     ctx.fillStyle = color;
     ctx.fillRect(currentX, currentY, part.wt, part.ht);
     ctx.strokeStyle = 'black';
     ctx.lineWidth = 1;
     ctx.strokeRect(currentX, currentY, part.wt, part.ht);
+
+    // Set text properties
+    ctx.fillStyle = 'black'; // Text color
+    ctx.font = '55px Arial'; // Text size and font
+    ctx.textBaseline = 'top'; // Align text vertically
+
+    // Draw partWidth at the top line
+    ctx.fillText(part.partWidth + 'mm', currentX + 4, currentY); // Adjust as needed for positioning
+
+    // Change text baseline for side drawing
+    ctx.textBaseline = 'bottom';
+    ctx.save(); // Save context to reset later
+    ctx.translate(currentX, currentY + part.ht);
+    ctx.rotate(-Math.PI / 2); // Rotate text for left side
+    ctx.fillText(part.partHeight + 'mm', 4, 0); // Adjust positioning
+    ctx.restore(); // Restore context to previous state
+}
+
+
+function applyCanvasZoom(ctx, scaleFactor) {
+    // Apply a transform to scale everything down by the specified scaleFactor
+    // This affects the "world" of the canvas, making everything drawn to it scaled.
+    ctx.setTransform(scaleFactor, 0, 0, scaleFactor, 0, 0); // Apply scaling
 }
 
 function handleError(error, dotnet) {
