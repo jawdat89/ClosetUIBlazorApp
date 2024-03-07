@@ -1,53 +1,53 @@
-﻿export function drawParts(canvasId, parts, dotnet) {
+﻿export function drawParts(canvasId, paramsModel, dotnet) {
     try {
         var canvas = document.getElementById(canvasId);
-        if (canvas.getContext) {
-            var ctx = canvas.getContext('2d');
+        if (!canvas) {
+            console.error('Canvas element not found');
+            return;
+        }
+        var ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            let currentX = 0; // Start position for X
-            let currentY = 0; // Start position for Y
-            let rowHeight = 0; // Height of the current row, to adjust Y when needed
+        var parts = paramsModel.parts;
+        var currentX = 0, currentY = 0, maxHeightInRow = 0, boardOffsetX = 0;
+        var boardWidth = paramsModel.totalWidth;
 
-            for (let i = 0; i < parts.length; i++) {
-                let part = parts[i];
+        for (var i = 0; i < parts.length; i++) {
+            var part = parts[i];
+            var color = generateRandomColor(); // One color per part type
 
-                if (currentX + part.Wt > canvas.width) { // Check if part fits in the current row
-                    currentX = 0; // Reset X to start new row
-                    currentY += rowHeight; // Move Y down to next row
-                    rowHeight = 0; // Reset row height for the new row
-                }
+            for (var qty = 0; qty < part.partQty; qty++) {
+                var pos = calculateNextPosition(part, currentX, currentY, maxHeightInRow, boardOffsetX, boardWidth, paramsModel.totalHeight);
+                currentX = pos.currentX;
+                currentY = pos.currentY;
+                maxHeightInRow = pos.maxHeightInRow;
+                boardOffsetX = pos.boardOffsetX;
 
-                // Update row height if current part's height is greater than the current max row height
-                if (part.Ht > rowHeight) {
-                    rowHeight = part.Ht;
-                }
+                drawPart(ctx, part, currentX, currentY, color);
 
-                // Check if there's enough vertical space to place the part
-                if (currentY + part.Ht > canvas.height) {
-                    console.error("Not enough space to place all parts");
-                    break; // Stop drawing if we run out of vertical space
-                }
+                // Update the x position for the next part instance
+                currentX += part.wt;
+                // Update the tallest part in the current row
+                maxHeightInRow = Math.max(maxHeightInRow, part.ht);
+            }
 
-                // Generate a random color
-                var r = Math.floor(Math.random() * 256);
-                var g = Math.floor(Math.random() * 256);
-                var b = Math.floor(Math.random() * 256);
-                ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.5)`;
-                ctx.strokeStyle = 'black';
-                ctx.lineWidth = 2;
-
-                // Draw part
-                ctx.fillRect(currentX, currentY, part.Wt, part.Ht);
-                ctx.strokeRect(currentX, currentY, part.Wt, part.Ht);
-
-                // Update X for the next part
-                currentX += part.Wt;
+            // Reset for next part type, if needed
+            if (currentX + part.wt > boardWidth) {
+                currentY += maxHeightInRow;
+                currentX = boardOffsetX; // May need adjusting based on your intended behavior
+                maxHeightInRow = 0;
             }
         }
+
+        dotnet.invokeMethodAsync('OnCanvasSuccess', true);
+
     } catch (e) {
-        handleError(e, dotnet);
+        console.error(e);
+        dotnet.invokeMethodAsync('OnCanvasError', 'Error drawing parts: ' + e.message);
     }
 }
+
+
 
 export function setCanvasSize(canvasId, dotnet) {
     try {
@@ -70,6 +70,35 @@ export function setCanvasSize(canvasId, dotnet) {
     } catch (e) {
         handleError(e, dotnet);
     }
+}
+
+function generateRandomColor() {
+    var r = Math.floor(Math.random() * 256);
+    var g = Math.floor(Math.random() * 256);
+    var b = Math.floor(Math.random() * 256);
+    return 'rgba(' + r + ', ' + g + ', ' + b + ', 0.5)'; // Semi-transparent color
+}
+
+function calculateNextPosition(part, currentX, currentY, maxHeightInRow, boardOffsetX, boardWidth, totalHeight) {
+    if (currentX + part.wt > boardWidth + boardOffsetX) {
+        currentY += maxHeightInRow; // Move to the next row
+        currentX = boardOffsetX; // Reset currentX to the start of the current board
+        maxHeightInRow = 0;
+    }
+    if (currentY + part.ht > totalHeight) {
+        boardOffsetX += boardWidth; // Start a new board
+        currentX = boardOffsetX; // Reset currentX to the start of the new board
+        currentY = 0; // Reset Y position for the new board
+    }
+    return { currentX, currentY, maxHeightInRow, boardOffsetX };
+}
+
+function drawPart(ctx, part, currentX, currentY, color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(currentX, currentY, part.wt, part.ht);
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(currentX, currentY, part.wt, part.ht);
 }
 
 function handleError(error, dotnet) {

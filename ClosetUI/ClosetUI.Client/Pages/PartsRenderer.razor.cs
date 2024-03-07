@@ -68,6 +68,7 @@ public partial class PartsRenderer : ComponentBase
             await module.InvokeVoidAsync("setCanvasSize", CanvasId, DotNetObjectReference.Create(this));
 
             await module.InvokeVoidAsync("drawParts", CanvasId, ParamsResult, DotNetObjectReference.Create(this));
+
             StateHasChanged();
         }
     }
@@ -77,5 +78,14 @@ public partial class PartsRenderer : ComponentBase
     {
         Console.WriteLine($"Error from JS: {message}");
         ErrorMessage = message;
+    }
+
+    [JSInvokable]
+    public void OnCanvasSuccess(bool success)
+    {
+        if (success == true)
+        {
+            StateHasChanged();
+        } 
     }
 }

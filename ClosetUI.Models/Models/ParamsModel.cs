@@ -182,30 +182,42 @@ public class ParamsModel
 
     public void CalculatePartPositions(ParamsModel p)
     {
+        // This example assumes FitWidths or FitHeights contain lists of parts grouped by best fit
+        // Let's say we decide to use FitWidths for horizontal arrangement and FitHeights for vertical if needed
+
         int currentX = 0, currentY = 0;
         int maxHeightInRow = 0;
 
-        foreach (var part in p.Parts)
+        // Example of iterating through FitWidths for horizontal arrangement
+        foreach (var group in p.FitWidths)
         {
-            if (currentX + part.Wt > p.TotalWidth)
+            foreach (var partMeasu in group)
             {
-                // Move to the next row
-                currentY += maxHeightInRow;
-                currentX = 0;
-                maxHeightInRow = 0;
-            }
+                ClosetPart part = p.Parts.FirstOrDefault(cp => cp.ID == partMeasu.ID);
+                if (part != null)
+                {
+                    if (currentX + part.Wt > p.TotalWidth)
+                    {
+                        // Move to the next row
+                        currentY += maxHeightInRow;
+                        currentX = 0;
+                        maxHeightInRow = 0;
+                    }
 
-            part.X = currentX;
-            part.Y = currentY;
+                    // Assuming part X and Y are to be set
+                    part.X = currentX;
+                    part.Y = currentY;
 
-            currentX += part.Wt;
-            maxHeightInRow = Math.Max(maxHeightInRow, part.Ht);
+                    currentX += part.Wt;
+                    maxHeightInRow = Math.Max(maxHeightInRow, part.Ht);
 
-            // Check if the current Y position exceeds the total height, handle accordingly
-            if (currentY + maxHeightInRow > p.TotalHeight)
-            {
-                // Exceeded material height, handle according to your requirements
-                break;
+                    // Check if the current Y position exceeds the total height, handle accordingly
+                    if (currentY + maxHeightInRow > p.TotalHeight)
+                    {
+                        // Exceeded material height, handle according to your requirements
+                        break;
+                    }
+                }
             }
         }
     }
