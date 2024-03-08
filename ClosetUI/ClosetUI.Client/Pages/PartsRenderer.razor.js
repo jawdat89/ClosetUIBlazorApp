@@ -3,46 +3,60 @@
         var canvas = document.getElementById(canvasId);
         if (!canvas) {
             console.error('Canvas element not found');
+            dotnet.invokeMethodAsync('OnCanvasError', 'Canvas element not found');
             return;
         }
         var ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+        // The logical layout is based on original dimensions from paramsModel
         var parts = paramsModel.parts;
         var currentX = 0, currentY = 0, maxHeightInRow = 0, boardOffsetX = 0;
         var boardWidth = paramsModel.totalWidth;
+        var boardHeight = paramsModel.totalHeight;
+        var scaleFactor = 1; // Assuming no visual scaling or adjust as needed
+
+        // Initial board dimensions drawing
+        drawBoardDimensions(ctx, boardOffsetX, 0, boardWidth, boardHeight, scaleFactor);
 
         for (var i = 0; i < parts.length; i++) {
             var part = parts[i];
-            var color = generateRandomColor(); // One color per part type
+            var partColor = generateRandomColor();
 
             for (var qty = 0; qty < part.partQty; qty++) {
-                var pos = calculateNextPosition(part, currentX, currentY, maxHeightInRow, boardOffsetX, boardWidth, paramsModel.totalHeight);
-                currentX = pos.currentX;
-                currentY = pos.currentY;
-                maxHeightInRow = pos.maxHeightInRow;
-                boardOffsetX = pos.boardOffsetX;
+                // Visual dimensions might be different, but logical checks use original dimensions
+                if (currentX + part.wt > boardWidth) {
+                    // Move to the next row
+                    currentY += maxHeightInRow;
+                    currentX = 0;
+                    maxHeightInRow = 0;
+                }
+                if (currentY + part.ht > paramsModel.totalHeight) {
+                    // Start a new board, reset X, and Y, and apply visual board offset
+                    boardOffsetX += boardWidth + 10; // Spacing between boards
+                    currentX = 0;
+                    currentY = 0;
 
-                drawPart(ctx, part, currentX, currentY, color);
+                    drawBoardDimensions(ctx, boardOffsetX, 0, boardWidth, boardHeight, scaleFactor);
+                }
 
-                // Update the x position for the next part instance
+                // Visual scaling for drawing, not affecting logical placement
+                var visualX = (currentX + boardOffsetX) * scaleFactor;
+                var visualY = currentY * scaleFactor;
+                var visualWt = part.wt * scaleFactor;
+                var visualHt = part.ht * scaleFactor;
+
+                drawPart(ctx, part, visualX, visualY, partColor, visualWt, visualHt);
+
+                // Update positions for the next part using original dimensions
                 currentX += part.wt;
-                // Update the tallest part in the current row
                 maxHeightInRow = Math.max(maxHeightInRow, part.ht);
-            }
-
-            // Reset for next part type, if needed
-            if (currentX + part.wt > boardWidth) {
-                currentY += maxHeightInRow;
-                currentX = boardOffsetX; // May need adjusting based on your intended behavior
-                maxHeightInRow = 0;
             }
         }
 
         dotnet.invokeMethodAsync('OnCanvasSuccess', true);
-
     } catch (e) {
-        console.error(e);
+        console.error('Error drawing parts: ' + e.message);
         dotnet.invokeMethodAsync('OnCanvasError', 'Error drawing parts: ' + e.message);
     }
 }
@@ -51,20 +65,31 @@ export function setCanvasSize(canvasId, dotnet) {
     try {
         const canvas = document.getElementById(canvasId);
 
-
         if (!canvas) return;
 
         canvas.style.backgroundColor = 'rgba(0,0,0,0.05)';
 
-        // Example: Set the canvas width to 90% of the window width and maintain a 16:9 aspect ratio
-        const maxWidth = window.innerWidth * 0.85; // 90% of the window width
-        const maxHeight = maxWidth * (9 / 16); // Maintain a 16:9 aspect ratio
+        // Determine the available space while keeping some margins from the window's dimensions
+        const maxWidth = window.innerWidth * 0.85;
+        const maxHeight = window.innerHeight * 0.85;
 
-        // You might want to add logic here to not exceed the original TotalWidth and TotalHeight
-        // if that's important for your application's functionality.
+        // Get the canvas's inherent aspect ratio if it has defined intrinsic dimensions
+        const intrinsicWidth = canvas.getAttribute('data-intrinsic-width');
+        const intrinsicHeight = canvas.getAttribute('data-intrinsic-height');
+        let aspectRatio = intrinsicWidth && intrinsicHeight ? intrinsicWidth / intrinsicHeight : maxWidth / maxHeight;
 
-        canvas.width = maxWidth;
-        canvas.height = maxHeight;
+        // Calculate potential dimensions
+        let potentialWidth = maxHeight * aspectRatio;
+        let potentialHeight = maxWidth / aspectRatio;
+
+        // Decide on the final size based on the potential dimensions fitting within the max constraints
+        if (potentialWidth <= maxWidth && potentialHeight <= maxHeight) {
+            canvas.width = potentialWidth;
+            canvas.height = maxHeight;
+        } else {
+            canvas.width = maxWidth;
+            canvas.height = potentialHeight;
+        }
 
         // Assuming you want to apply the zoom effect immediately after setting the canvas size
         const ctx = canvas.getContext('2d');
@@ -81,31 +106,17 @@ function generateRandomColor() {
     return 'rgba(' + r + ', ' + g + ', ' + b + ', 0.5)'; // Semi-transparent color
 }
 
-function calculateNextPosition(part, currentX, currentY, maxHeightInRow, boardOffsetX, boardWidth, totalHeight) {
-    if (currentX + part.wt > boardWidth + boardOffsetX) {
-        currentY += maxHeightInRow; // Move to the next row
-        currentX = boardOffsetX; // Reset currentX to the start of the current board
-        maxHeightInRow = 0;
-    }
-    if (currentY + part.ht > totalHeight) {
-        boardOffsetX += boardWidth; // Start a new board
-        currentX = boardOffsetX; // Reset currentX to the start of the new board
-        currentY = 0; // Reset Y position for the new board
-    }
-    return { currentX, currentY, maxHeightInRow, boardOffsetX };
-}
-
-function drawPart(ctx, part, currentX, currentY, color) {
+function drawPart(ctx, part, currentX, currentY, color, visualWt, visualHt) {
     // Draw the part as before
     ctx.fillStyle = color;
-    ctx.fillRect(currentX, currentY, part.wt, part.ht);
+    ctx.fillRect(currentX, currentY, visualWt, visualHt);
     ctx.strokeStyle = 'black';
     ctx.lineWidth = 1;
-    ctx.strokeRect(currentX, currentY, part.wt, part.ht);
+    ctx.strokeRect(currentX, currentY, visualWt, visualHt);
 
     // Set text properties
     ctx.fillStyle = 'black'; // Text color
-    ctx.font = '55px Arial'; // Text size and font
+    ctx.font = '22px Arial'; // Text size and font
     ctx.textBaseline = 'top'; // Align text vertically
 
     // Draw partWidth at the top line
@@ -120,6 +131,14 @@ function drawPart(ctx, part, currentX, currentY, color) {
     ctx.restore(); // Restore context to previous state
 }
 
+function drawBoardDimensions(ctx, offsetX, offsetY, width, height, scaleFactor) {
+    var visualWidth = width * scaleFactor;
+    var visualHeight = height * scaleFactor;
+
+    ctx.strokeStyle = "#3C3732FF"; // Color for board dimensions outline
+    ctx.lineWidth = 2; // Line width for the outline
+    ctx.strokeRect(offsetX, offsetY, visualWidth, visualHeight); // Draw the outline for each board
+}
 
 function applyCanvasZoom(ctx, scaleFactor) {
     // Apply a transform to scale everything down by the specified scaleFactor
