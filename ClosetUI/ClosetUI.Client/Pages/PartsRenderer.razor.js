@@ -61,43 +61,43 @@
     }
 }
 
-export function setCanvasSize(canvasId, dotnet) {
-    try {
-        const canvas = document.getElementById(canvasId);
+//export function setCanvasSize(canvasId, dotnet) {
+//    try {
+//        const canvas = document.getElementById(canvasId);
 
-        if (!canvas) return;
+//        if (!canvas) return;
 
-        canvas.style.backgroundColor = 'rgba(0,0,0,0.05)';
+//        canvas.style.backgroundColor = 'rgba(0,0,0,0.05)';
 
-        // Determine the available space while keeping some margins from the window's dimensions
-        const maxWidth = window.innerWidth * 0.85;
-        const maxHeight = window.innerHeight * 0.85;
+//        // Determine the available space while keeping some margins from the window's dimensions
+//        const maxWidth = window.innerWidth * 0.85;
+//        const maxHeight = window.innerHeight * 0.85;
 
-        // Get the canvas's inherent aspect ratio if it has defined intrinsic dimensions
-        const intrinsicWidth = canvas.getAttribute('data-intrinsic-width');
-        const intrinsicHeight = canvas.getAttribute('data-intrinsic-height');
-        let aspectRatio = intrinsicWidth && intrinsicHeight ? intrinsicWidth / intrinsicHeight : maxWidth / maxHeight;
+//        // Get the canvas's inherent aspect ratio if it has defined intrinsic dimensions
+//        const intrinsicWidth = canvas.getAttribute('data-intrinsic-width');
+//        const intrinsicHeight = canvas.getAttribute('data-intrinsic-height');
+//        let aspectRatio = intrinsicWidth && intrinsicHeight ? intrinsicWidth / intrinsicHeight : maxWidth / maxHeight;
 
-        // Calculate potential dimensions
-        let potentialWidth = maxHeight * aspectRatio;
-        let potentialHeight = maxWidth / aspectRatio;
+//        // Calculate potential dimensions
+//        let potentialWidth = maxHeight * aspectRatio;
+//        let potentialHeight = maxWidth / aspectRatio;
 
-        // Decide on the final size based on the potential dimensions fitting within the max constraints
-        if (potentialWidth <= maxWidth && potentialHeight <= maxHeight) {
-            canvas.width = potentialWidth;
-            canvas.height = maxHeight;
-        } else {
-            canvas.width = maxWidth;
-            canvas.height = potentialHeight;
-        }
+//        // Decide on the final size based on the potential dimensions fitting within the max constraints
+//        if (potentialWidth <= maxWidth && potentialHeight <= maxHeight) {
+//            canvas.width = potentialWidth;
+//            canvas.height = maxHeight;
+//        } else {
+//            canvas.width = maxWidth;
+//            canvas.height = potentialHeight;
+//        }
 
-        // Assuming you want to apply the zoom effect immediately after setting the canvas size
-        const ctx = canvas.getContext('2d');
-        applyCanvasZoom(ctx, 0.5); // Apply a 50% zoom out effect
-    } catch (e) {
-        handleError(e, dotnet);
-    }
-}
+//        // Assuming you want to apply the zoom effect immediately after setting the canvas size
+//        const ctx = canvas.getContext('2d');
+//        applyCanvasZoom(ctx, 0.5); // Apply a 50% zoom out effect
+//    } catch (e) {
+//        handleError(e, dotnet);
+//    }
+//}
 
 function generateRandomColor() {
     var r = Math.floor(Math.random() * 256);
@@ -140,11 +140,11 @@ function drawBoardDimensions(ctx, offsetX, offsetY, width, height, scaleFactor) 
     ctx.strokeRect(offsetX, offsetY, visualWidth, visualHeight); // Draw the outline for each board
 }
 
-function applyCanvasZoom(ctx, scaleFactor) {
-    // Apply a transform to scale everything down by the specified scaleFactor
-    // This affects the "world" of the canvas, making everything drawn to it scaled.
-    ctx.setTransform(scaleFactor, 0, 0, scaleFactor, 0, 0); // Apply scaling
-}
+//function applyCanvasZoom(ctx, scaleFactor) {
+//    // Apply a transform to scale everything down by the specified scaleFactor
+//    // This affects the "world" of the canvas, making everything drawn to it scaled.
+//    ctx.setTransform(scaleFactor, 0, 0, scaleFactor, 0, 0); // Apply scaling
+//}
 
 function handleError(error, dotnet) {
     if (error) {
