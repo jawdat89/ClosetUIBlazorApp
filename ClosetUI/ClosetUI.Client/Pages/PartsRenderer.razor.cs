@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Text.Json;
 using System.Drawing;
+using System.Reflection.Metadata;
 
 namespace ClosetUI.Client.Pages;
 
@@ -18,6 +19,8 @@ public partial class PartsRenderer : ComponentBase
     private double GlobalY = 0;
     private bool isDragging = false;
     private CanvasMouseArgs lastDragPosition;
+
+    private string currentCursorClass = "cursor-grab";
 
     protected Canvas2DContext Ctx;
     protected BECanvasComponent CanvasReference;
@@ -80,13 +83,15 @@ public partial class PartsRenderer : ComponentBase
 
             var module = await moduleTask.Value;
 
+            await module.InvokeVoidAsync("initCanvas", DotNetObjectReference.Create(this));
+
             // BeCanvas
             Ctx = await CanvasReference.CreateCanvas2DAsync();
             // Initialize the helper
             await CanvasHelper.Initialize();
 
             // If you need to apply a transformation such as zooming
-            ScaleFactor = 0.5; // Adjust as needed
+            ScaleFactor = 0.2; // Adjust as needed
             await Ctx.SetTransformAsync(ScaleFactor, 0, 0, ScaleFactor, 0, 0);
         }
     }
@@ -167,6 +172,10 @@ public partial class PartsRenderer : ComponentBase
         double boardWidth = ParamsResult.TotalWidth;
         double boardHeight = ParamsResult.TotalHeight;
 
+        int boardIndex = 0;
+
+        int boardsGap = 55;
+
         // Loop through each part
         foreach (var part in parts)
         {
@@ -181,7 +190,10 @@ public partial class PartsRenderer : ComponentBase
 
                 if (currentY + part.Ht > boardHeight)
                 {
-                    boardOffsetX += boardWidth + 10; // Start new board
+                    // Draw dimensions for the current board before starting a new one
+                    await DrawBoardDimensionsAsync(boardOffsetX, 0, boardWidth, boardHeight, boardIndex);
+
+                    boardOffsetX += boardWidth + boardsGap; // Start new board
                     currentX = 0;
                     currentY = 0;
                     maxHeightInRow = 0;
@@ -195,12 +207,8 @@ public partial class PartsRenderer : ComponentBase
             }
         }
 
-        // Draw board outlines after all parts are drawn for visual clarity
-        double boardsCount = Math.Ceiling((currentY + maxHeightInRow) / boardHeight);
-        for (int i = 0; i < boardsCount; i++)
-        {
-            await DrawBoardDimensionsAsync(i * (boardWidth + 10), 0, boardWidth, boardHeight);
-        }
+        // Ensure the last board's dimensions are also drawn
+        await DrawBoardDimensionsAsync(boardOffsetX, 0, boardWidth, boardHeight, boardIndex);
     }
 
     // Modified to accept a ClosetPart parameter and match your provided JS function signature
@@ -235,7 +243,7 @@ public partial class PartsRenderer : ComponentBase
         await Ctx.FillTextAsync(text, textX, textY);
     }
 
-    private async Task DrawBoardDimensionsAsync(double offsetX, double offsetY, double width, double height)
+    private async Task DrawBoardDimensionsAsync(double offsetX, double offsetY, double width, double height, int boardIndex)
     {
         await Ctx.SetStrokeStyleAsync("#3C3732FF"); // Outline color
         await Ctx.SetLineWidthAsync(2); // Line width
