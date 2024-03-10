@@ -1,0 +1,23 @@
+﻿@page "/PartsRenderer"
+@* @attribute [StreamRendering(true)] *@
+@rendermode InteractiveWebAssembly
+
+<PageTitle>Parts Drawer</PageTitle>
+
+<HeadContent>
+    <meta name="description" content="Carpentry Parts Generator, Parts Drawer"
+</HeadContent>
+
+<h1 class="text-center">Parts Drawer</h1>
+
+<CanvasHelper @ref="CanvasHelper"
+              CanvasResized="CanvasResized"
+              RenderFrame="RenderFrame"
+              MouseDown="MouseDown"
+              MouseUp="MouseUp"
+              MouseMove="MouseMove"
+              MouseWheel="MouseWheel">
+
+    <BECanvas Width="600" Height="400" @ref="CanvasReference"></BECanvas>
+
+</CanvasHelper>

@@ -7,7 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\ClosetUI.Client\Pages\CanvasHelper.razor.cs" Link="CanvasHelper.razor.cs" />
+    <Compile Include="..\ClosetUI.Client\Pages\PartsRenderer.razor.cs" Link="PartsRenderer.razor.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ClosetUI.Client\ClosetUI.Client.csproj" />
+    <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.2" />
   </ItemGroup>
 

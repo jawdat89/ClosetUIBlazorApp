@@ -1,7 +1,9 @@
-using ClosetUI.Client.Pages;
 using ClosetUI.Components;
+using ClosetUI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddScoped<IPartCalculationService, PartCalculationService>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
