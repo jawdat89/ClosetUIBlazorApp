@@ -1,4 +1,5 @@
 ﻿@page "/"
+@inject IStringLocalizer<LocalizationResource> Loc
 @inherits PartsGeneratorBase
 @rendermode InteractiveServer
 
@@ -18,55 +19,55 @@ else if (!string.IsNullOrWhiteSpace(ErrorMessage))
 }
 else
 {
-    <h3 class="mb-5 text-center">Part Generator Page</h3>
+    <h1 class="mb-5 text-center">@Loc["PartsGenerator.Title"]</h1>
 
     <EditForm Model="@Params" OnSubmit="() => Calculate_Click(Params)" FormName="PartsGeneraorForm">
         <div class="form-group col-md-2">
-            <label for="bladeThickness">Blade Thickness: </label>
+            <label for="bladeThickness">@Loc["PartsGenerator.Input.BladeThickness"] </label>
             <InputNumber @bind-Value="Params.BladeThickness" id="bladeThickness" class="form-control " />
             <label for="bladeThickness">mm</label>
         </div>
 
         <div class="form-group  col-md-2">
-            <label for="direction">Direction</label>
+            <label for="direction">@Loc["PartsGenerator.Input.Direction"]</label>
             <InputSelect @bind-Value="Params.Direction" id="direction" class="form-control main-input">
-                <option value="1">Vertical</option>
-                <option value="2">Horizontal</option>
+                <option value="1">@Loc["Direction.Vertical"]</option>
+                <option value="2">@Loc["Direction.Horizontal"]</option>
             </InputSelect>
         </div>
 
         <div class="form-group col-md-2">
-            <label for="total-width">Total Width: </label>
+            <label for="total-width">@Loc["PartsGenerator.Input.TotalWidth"] </label>
             <InputNumber @bind-Value="Params.TotalWidth" id="total-width" class="form-control main-input" />
             <label for="total-width">mm</label>
         </div>
 
         <div class="form-group col-md-2">
-            <label for="total-height">Total Height: </label>
+            <label for="total-height">@Loc["PartsGenerator.Input.TotalHeight"] </label>
             <InputNumber @bind-Value="Params.TotalHeight" id="total-height" class="form-control main-input" />
             <label for="total-height">mm</label>
         </div>
 
         <div class="form-group col-md-2">
-            <label for="hypotenuse-type">Hypotenuse Type</label>
+            <label for="hypotenuse-type">@Loc["PartsGenerator.Input.HypotenuseType"]</label>
             <InputSelect @bind-Value="Params.HypotenuseType" id="hypotenuse-type" class="form-control main-input">
-                <option value="1">Interior</option>
-                <option value="2">Exterior</option>
+                <option value="1">@Loc["HypotenuseType.Interior"]</option>
+                <option value="2">@Loc["HypotenuseType.Exterior"]</option>
             </InputSelect>
         </div>
 
         <hr class="my-3" />
         <div class="row">
-            <h2>Parts List</h2>
+            <h2>@Loc["PartsGenerator.PartsListTitle"]</h2>
             <div class="table-responsive">
                 <table class="table max-w-90">
                     <thead>
                         <tr>
-                            <th scope="col">Part Name</th>
-                            <th scope="col">Width (mm)</th>
-                            <th scope="col">Height (mm)</th>
-                            <th scope="col">Qty</th>
-                            <th scope="col">Actions</th>
+                            <th scope="col">@Loc["PartsGenerator.Input.Parts.Name"]</th>
+                            <th scope="col">@Loc["PartsGenerator.Input.Parts.Width"]</th>
+                            <th scope="col">@Loc["PartsGenerator.Input.Parts.Height"]</th>
+                            <th scope="col">@Loc["PartsGenerator.Input.Parts.Qty"]</th>
+                            <th scope="col">@Loc["PartsGenerator.Input.Parts.Actions"]</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -80,10 +81,10 @@ else
                                 <td>
                                     <div class="btn-group flex-wrap">
                                         <button type="button" class="btn btn-secondary" @onclick="() => AddPart(part.value)">
-                                            <i class="fa-regular fa-square-plus"></i>&thinsp;Add
+                                            @Loc["Actions.Add"]&thinsp;<i class="fa-regular fa-square-plus"></i>
                                         </button>
                                         <button type="button" disabled="@CheckIfDeleteDisabled()" class="btn btn-danger" @onclick="() => DeletePart(part.value)">
-                                            <i class="fa-regular fa-trash-can"></i>&thinsp;Delete
+                                            @Loc["Actions.Delete"]&thinsp;<i class="fa-regular fa-trash-can"></i>
                                         </button>
                                     </div>
                                 </td>
@@ -97,11 +98,10 @@ else
         <div class="row justify-content-end">
             <div class="col-12 col-sm-12 col-md-4 col-lg-3 col-xl-2">
                 <button type="submit" class="btn btn-primary w-100">
-                    <i class="fa-solid fa-square-root-variable"></i>&thinsp;Calculate
+                    @Loc["Actions.Calculate"]&thinsp;<i class="fa-solid fa-square-root-variable"></i>
                 </button>
             </div>
         </div>
         <hr class="my-3" />
     </EditForm>
-
 }

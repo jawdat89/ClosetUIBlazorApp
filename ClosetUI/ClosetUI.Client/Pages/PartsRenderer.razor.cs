@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Text.Json;
 using System.Drawing;
-using System.Reflection.Metadata;
 
 namespace ClosetUI.Client.Pages;
 
@@ -15,7 +14,7 @@ public partial class PartsRenderer : ComponentBase
     private double FPS;
     private double ScaleFactor;
 
-    private double GlobalX = 0;
+    private double GlobalX = 850;
     private double GlobalY = 0;
     private bool isDragging = false;
     private CanvasMouseArgs lastDragPosition;
@@ -91,7 +90,7 @@ public partial class PartsRenderer : ComponentBase
             await CanvasHelper.Initialize();
 
             // If you need to apply a transformation such as zooming
-            ScaleFactor = 0.2; // Adjust as needed
+            ScaleFactor = 0.19; // Adjust as needed
             await Ctx.SetTransformAsync(ScaleFactor, 0, 0, ScaleFactor, 0, 0);
         }
     }
@@ -236,7 +235,7 @@ public partial class PartsRenderer : ComponentBase
         double textWidth = fontSize * text.Length / 2; // Rough approximation
 
         // Calculate the position to center the text within the part
-        double textX = currentX + (width - textWidth) / 2;
+        double textX = currentX + (width + textWidth) / 2;
         double textY = currentY + (height + fontSize) / 2; // Adjust for vertical centering
 
         // Draw the text

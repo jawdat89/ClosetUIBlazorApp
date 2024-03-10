@@ -5,12 +5,24 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IPartCalculationService, PartCalculationService>();
 
+builder.Services.AddLocalization();
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
 
+builder.Services.AddControllers();
+
 var app = builder.Build();
+
+string[] supportedCultures = ["en", "he"];
+var localizationOptions = new RequestLocalizationOptions()
+    .SetDefaultCulture(supportedCultures[1])
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures);
+
+app.UseRequestLocalization(localizationOptions);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -33,5 +45,7 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(ClosetUI.Client._Imports).Assembly);
+
+app.MapControllers();
 
 app.Run();
