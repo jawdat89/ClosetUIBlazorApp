@@ -26,6 +26,9 @@ namespace ClosetUI.Components.Pages
 
         protected ParamsModel paramsResult { get; set; }
 
+        protected bool invalidForm = false;
+        protected ToastMessage ToastMessage { get; set; }
+
         protected override async Task OnInitializedAsync()
         {
             try
@@ -65,16 +68,20 @@ namespace ClosetUI.Components.Pages
         {
             try
             {
-                paramsResult = await PartCalculationService.ProcessAsync(partGeneratorDto);
+                CheckFormValidity();
+                if (!invalidForm)
+                {
+                    paramsResult = await PartCalculationService.ProcessAsync(partGeneratorDto);
 
-                //// Save jsonData to local storage
-                //await ManageParamsLocalStorageService.AddCollection(paramsResult);
+                    //// Save jsonData to local storage
+                    //await ManageParamsLocalStorageService.AddCollection(paramsResult);
 
-                // Serialize paramsResult to JSON
-                var jsonData = JsonSerializer.Serialize(paramsResult);
+                    // Serialize paramsResult to JSON
+                    var jsonData = JsonSerializer.Serialize(paramsResult);
 
-                // Navigate to the new page
-                NavigationManager.NavigateTo($"/PartsRenderer?val={jsonData}");
+                    // Navigate to the new page
+                    NavigationManager.NavigateTo($"/PartsRenderer?val={jsonData}");
+                }
             }
             catch (Exception ex)
             {
@@ -93,7 +100,6 @@ namespace ClosetUI.Components.Pages
 
             // Add Input Part to the list
             Params.Parts.Append(newPart);
-
 
             // Add a new line
             var partsList = Params.Parts.ToList();
@@ -132,5 +138,50 @@ namespace ClosetUI.Components.Pages
                 return true;
             return false;
         }
+
+        private void CheckFormValidity()
+        {
+            if (PartList.Count <= 1)
+            {
+                CreateToastMessage(ToastType.Warning, "No Parts", "Please fill in parts");
+                invalidForm = true;
+            } 
+            else 
+            { 
+                invalidForm = false;
+            }
+            foreach (var part in PartList)
+            {
+                if (string.IsNullOrWhiteSpace(part.PartName))
+                {
+                    ToastMessage = CreateToastMessage(ToastType.Warning, "Invalid Parts", "Please fill in part names");
+                    invalidForm = true;
+                }
+                else
+                {
+                    invalidForm = false;
+                }
+            }
+        }
+
+        protected void OnPartChange()
+        {
+            CheckFormValidity();
+        }
+
+        protected void ResetValidity()
+        {
+            ToastMessage = new();
+            invalidForm = false;
+        }
+
+        protected ToastMessage CreateToastMessage(ToastType toastType, string title, string message)
+            => new ToastMessage
+            {
+                Type = toastType,
+                Title = title,
+                HelpText = $"{DateTime.Now}",
+                Message = $"{message}. DateTime: {DateTime.Now}",
+            };
     }
 }

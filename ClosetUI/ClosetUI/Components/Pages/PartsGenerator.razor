@@ -22,6 +22,7 @@ else
     <h1 class="mb-5 text-center">@Loc["PartsGenerator.Title"]</h1>
 
     <EditForm Model="@Params" OnSubmit="() => Calculate_Click(Params)" FormName="PartsGeneraorForm">
+        <DataAnnotationsValidator />
         <div class="form-group col-md-2">
             <label for="bladeThickness">@Loc["PartsGenerator.Input.BladeThickness"] </label>
             <InputNumber @bind-Value="Params.BladeThickness" id="bladeThickness" class="form-control " />
@@ -74,10 +75,10 @@ else
                         @foreach (var part in PartList.Select((value, index) => new { value, index }))
                         {
                             <tr>
-                                <td><InputText @bind-Value="part.value.PartName" class="form-control" /></td>
-                                <td><InputNumber @bind-Value="part.value.PartWidth" class="form-control" /></td>
-                                <td><InputNumber @bind-Value="part.value.PartHeight" class="form-control" /></td>
-                                <td><InputNumber @bind-Value="part.value.PartQty" class="form-control" /></td>
+                                <td><InputText @bind-Value="part.value.PartName" class="form-control"     @onchange="OnPartChange"/></td>
+                                <td><InputNumber @bind-Value="part.value.PartWidth" class="form-control"  @onchange="OnPartChange"/></td>
+                                <td><InputNumber @bind-Value="part.value.PartHeight" class="form-control" @onchange="OnPartChange"/></td>
+                                <td><InputNumber @bind-Value="part.value.PartQty" class="form-control"    @onchange="OnPartChange"/></td>
                                 <td>
                                     <div class="btn-group flex-wrap">
                                         <button type="button" class="btn btn-secondary" @onclick="() => AddPart(part.value)">
@@ -104,4 +105,16 @@ else
         </div>
         <hr class="my-3" />
     </EditForm>
+    @if (invalidForm == true)
+    {
+        <div class="align-items-center" style="background-color:#d3000077" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    @ToastMessage.Message
+                </div>
+                <button type="button" class="btn-close me-2 m-auto" aria-label="Close" @onclick="ResetValidity"></button>
+            </div>
+        </div>
+    }
+   
 }
