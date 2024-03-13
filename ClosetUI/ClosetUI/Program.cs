@@ -1,4 +1,5 @@
 using ClosetUI.Components;
+using ClosetUI.Models.Locales;
 using ClosetUI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,7 +13,11 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddDataAnnotationsLocalization(options =>
+    {
+        options.DataAnnotationLocalizerProvider = (type, factory) => factory.Create(typeof(PartGeneratorDtoResource));
+    });
 
 var app = builder.Build();
 

@@ -27,6 +27,7 @@ else
             <label for="bladeThickness">@Loc["PartsGenerator.Input.BladeThickness"] </label>
             <InputNumber @bind-Value="Params.BladeThickness" id="bladeThickness" class="form-control " />
             <label for="bladeThickness">mm</label>
+            <ValidationMessage For="@(() => Params.BladeThickness)" />
         </div>
 
         <div class="form-group  col-md-2">
@@ -41,12 +42,14 @@ else
             <label for="total-width">@Loc["PartsGenerator.Input.TotalWidth"] </label>
             <InputNumber @bind-Value="Params.TotalWidth" id="total-width" class="form-control main-input" />
             <label for="total-width">mm</label>
+            <ValidationMessage For="@(() => Params.TotalWidth)" />
         </div>
 
         <div class="form-group col-md-2">
             <label for="total-height">@Loc["PartsGenerator.Input.TotalHeight"] </label>
             <InputNumber @bind-Value="Params.TotalHeight" id="total-height" class="form-control main-input" />
             <label for="total-height">mm</label>
+            <ValidationMessage For="@(() => Params.TotalHeight)" />
         </div>
 
         <div class="form-group col-md-2">
@@ -72,7 +75,7 @@ else
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var part in PartList.Select((value, index) => new { value, index }))
+                        @foreach (var part in Params.Parts.Select((value, index) => new { value, index }))
                         {
                             <tr>
                                 <td><InputText @bind-Value="part.value.PartName" class="form-control"     @onchange="OnPartChange"/></td>

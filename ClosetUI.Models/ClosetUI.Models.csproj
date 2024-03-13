@@ -16,6 +16,11 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
     </Compile>
+    <Compile Update="Locales\PartGeneratorDtoResource.en.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>PartGeneratorDtoResource.en.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -26,6 +31,10 @@
     <EmbeddedResource Update="Locales\LocalizationResource.he.resx">
       <LastGenOutput>LocalizationResource.he.Designer.cs</LastGenOutput>
       <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Locales\PartGeneratorDtoResource.en.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>PartGeneratorDtoResource.en.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
 

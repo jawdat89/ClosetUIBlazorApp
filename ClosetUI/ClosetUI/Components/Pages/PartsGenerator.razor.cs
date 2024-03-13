@@ -22,8 +22,6 @@ namespace ClosetUI.Components.Pages
         [Parameter]
         public int LastIndex { get; set; } = -1;
 
-        public List<PartInput> PartList { get; set; } = [];
-
         protected ParamsModel paramsResult { get; set; }
 
         protected bool invalidForm = false;
@@ -128,7 +126,7 @@ namespace ClosetUI.Components.Pages
 
         private void UpdateParamsPartsList(IEnumerable<PartInput> partInputs)
         {
-            PartList = new List<PartInput>(partInputs);
+            Params.Parts = new List<PartInput>(partInputs);
             LastIndex = partInputs.Count() - 1;
         }
 
@@ -141,7 +139,7 @@ namespace ClosetUI.Components.Pages
 
         private void CheckFormValidity()
         {
-            if (PartList.Count <= 1)
+            if (Params.Parts.Count <= 1)
             {
                 CreateToastMessage(ToastType.Warning, "No Parts", "Please fill in parts");
                 invalidForm = true;
@@ -150,7 +148,7 @@ namespace ClosetUI.Components.Pages
             { 
                 invalidForm = false;
             }
-            foreach (var part in PartList)
+            foreach (var part in Params.Parts)
             {
                 if (string.IsNullOrWhiteSpace(part.PartName))
                 {
