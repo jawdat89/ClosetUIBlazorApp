@@ -170,6 +170,21 @@ public partial class CanvasHelper : ComponentBase, IAsyncDisposable
         await MouseWheel.InvokeAsync(args);
     }
 
+    [JSInvokable]
+    public async Task downloadCanvasAsImage()
+    {
+        _moduleTask = new(() => _jsRuntime.InvokeAsync<IJSObjectReference>(
+            "import", "./Pages/CanvasHelper.razor.js").AsTask());
+        // Load the module
+        var module = await _moduleTask.Value;
+
+        // Initialize
+        await module.InvokeVoidAsync("downloadCanvasAsImage", $"ClosetUI-{DateOnly.FromDateTime(DateTime.Now):yyyyMMdd}", DotNetObjectReference.Create(this));
+
+        // Dispose the module
+        await module.DisposeAsync();
+    }
+
     /// <summary>
     /// Dispose of our module resource
     /// </summary>

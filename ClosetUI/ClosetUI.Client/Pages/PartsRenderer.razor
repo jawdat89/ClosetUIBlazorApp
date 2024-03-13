@@ -1,5 +1,4 @@
 ﻿@page "/PartsRenderer"
-@* @attribute [StreamRendering(true)] *@
 @rendermode InteractiveWebAssembly
 
 <PageTitle>Parts Drawer</PageTitle>
@@ -7,6 +6,7 @@
 <HeadContent>
     <meta name="description" content="Carpentry Parts Generator, Parts Drawer"
 </HeadContent>
+<button @onclick="SaveCanvasAsImageAsync" class="btn btn-primary" style="z-index: 20;"><i class="fa-solid fa-download"></i></button>
 
 @* <h1 class="text-center">Parts Drawer</h1> *@
 

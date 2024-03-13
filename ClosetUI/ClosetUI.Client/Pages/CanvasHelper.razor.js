@@ -27,6 +27,21 @@ export function initRenderJS(instance) {
     window.requestAnimationFrame(renderJS);
 }
 
+/* Add downloadCanvasAsImage function */
+export function downloadCanvasAsImage(imageName, dotnet) {
+    var holder = document.getElementById('canvasHolder');
+    var canvas = holder ? holder.querySelector('canvas') : null;
+    if (canvas) {
+        const image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+        let link = document.createElement('a');
+        link.download = `${imageName}.png`;
+        link.href = image;
+        document.body.appendChild(link); // Ensure the link is in the document
+        link.click();
+        document.body.removeChild(link); // Clean up
+    }
+}
+
 /*This is called whenever we have requested an animation frame*/
 function renderJS(timeStamp) {
     // Call the blazor component's [JSInvokable] RenderInBlazor method
