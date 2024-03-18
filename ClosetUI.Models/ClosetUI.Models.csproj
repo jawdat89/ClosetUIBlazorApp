@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Localization" Version="2.2.0" />
+    <PackageReference Include="QuestPDF" Version="2023.12.6" />
   </ItemGroup>
 
   <ItemGroup>

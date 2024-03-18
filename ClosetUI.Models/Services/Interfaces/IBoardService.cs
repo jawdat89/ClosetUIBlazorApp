@@ -1,8 +1,8 @@
 ﻿using ClosetUI.Models.Models;
 
-namespace ClosetUI.Models.Services.Interfaces;
+namespace ClosetUI.Services;
 
-public interface IBoardDrawingService
+public interface IBoardService
 {
     Task<BoardDrawingData> PrepareDrawingData(ParamsModel paramsModel);
 }

@@ -1,9 +1,9 @@
-﻿using ClosetUI.Models.Models;
-using ClosetUI.Models.Services.Interfaces;
+﻿
+using ClosetUI.Models.Models;
 
-namespace ClosetUI.Models.Services;
+namespace ClosetUI.Services;
 
-public class BoardDrawingService : IBoardDrawingService
+public class BoardService : IBoardService
 {
     public async Task<BoardDrawingData> PrepareDrawingData(ParamsModel paramsModel)
     {
@@ -14,7 +14,7 @@ public class BoardDrawingService : IBoardDrawingService
         int boardIndex = 1; // Initialize boardIndex to start with the first board.
         double xPosition = 0, yPosition = 0; // Track the current X and Y position on the board for placing parts.
         double currentRowMaxHeight = 0; // Keep track of the maximum part height in the current row to calculate the starting Y position of the next row.
-        
+
         // Initialize the first board.
         Board currentBoard = new Board { BoardIndex = boardIndex };
 

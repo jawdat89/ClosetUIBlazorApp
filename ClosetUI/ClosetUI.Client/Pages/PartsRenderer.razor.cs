@@ -2,11 +2,9 @@ using Blazor.Extensions.Canvas.Canvas2D;
 using Blazor.Extensions;
 using ClosetUI.Models.Models;
 using Microsoft.AspNetCore.Components;
-using System.Text.Json;
 using System.Drawing;
-using ClosetUI.Models.Services;
 using ClosetUI.Services;
-using ClosetUI.Models.Services.Interfaces;
+using Microsoft.JSInterop;
 
 namespace ClosetUI.Client.Pages;
 
@@ -33,7 +31,12 @@ public partial class PartsRenderer : ComponentBase
     protected IPartCalculationService ParamsClientService {  get; set; }
 
     [Inject]
-    protected IBoardDrawingService BoardDrawingService { get; set; }
+    protected IBoardService BoardService { get; set; }
+
+    private Lazy<Task<IJSObjectReference>> _moduleTask;
+
+    [Inject]
+    protected IJSRuntime _jsRuntime { get; set; }
 
     protected ParamsModel? ParamsResult { get; set; }
 
@@ -49,7 +52,7 @@ public partial class PartsRenderer : ComponentBase
             if (result != null)
             {
                 ParamsResult = result;
-                DrawingData = await BoardDrawingService.PrepareDrawingData(ParamsResult);
+                DrawingData = await BoardService.PrepareDrawingData(ParamsResult);
             }
         }
         catch (Exception ex)
@@ -62,6 +65,14 @@ public partial class PartsRenderer : ComponentBase
     {
         if (firstRender)
         {
+            // Load local JS file
+            // We need to specify the .js file path relative to this code
+            _moduleTask = new(() => _jsRuntime.InvokeAsync<IJSObjectReference>(
+                "import", "./Pages/PartsRenderer.razor.js").AsTask());
+
+            // Load the module
+            var module = await _moduleTask.Value;
+
             // BeCanvas
             Ctx = await CanvasReference.CreateCanvas2DAsync();
             // Initialize the helper
@@ -148,6 +159,36 @@ public partial class PartsRenderer : ComponentBase
     protected async Task SaveCanvasAsImageAsync()
     {
         await CanvasHelper.downloadCanvasAsImage();
+    }
+
+    protected async Task GeneratePdfAsync()
+    {
+        try
+        {
+
+            var filecContenct = await ParamsClientService.GenerateAndDownloadPdf(ParamsResult);
+
+            if (filecContenct != null)
+            
+            {
+                var fileName = $"ClosetUI PDF {DateTime.Now.ToString("yyyyMMdd")}";
+                await TriggerFileDownload(fileName, filecContenct);
+            }
+        }
+        catch (Exception ex) 
+        {
+            // do nothingdf
+            ErrorMessage = ex.Message;
+        }
+
+    }
+
+    private async Task TriggerFileDownload(string fileName, byte[] fileContent)
+    {
+        var module = await _moduleTask.Value;
+
+        // Initialize
+        await module.InvokeVoidAsync("saveAsFile", fileName, fileContent);
     }
     // #endregion Mouse Methods
 

@@ -1,12 +1,10 @@
 ﻿using ClosetUI.Models.Dtos;
 using ClosetUI.Models.Models;
-using ClosetUI.Services;
 using Microsoft.Extensions.Logging;
-using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text.Json;
+using System.Reflection.Metadata;
 
-namespace ClosetUI.Models.Services
+namespace ClosetUI.Services
 {
     public class ParamsClientService : IPartCalculationService
     {
@@ -17,6 +15,36 @@ namespace ClosetUI.Models.Services
         {
             _httpClient = httpClient;
             _logger = logger;
+        }
+
+        public async Task<byte[]> GenerateAndDownloadPdf(ParamsModel paramsModel)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("api/Params/GeneratePdf", paramsModel);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
+                    {
+                        return default(byte[]);
+                    }
+
+                    // Directly return the byte array content if successful
+                    return await response.Content.ReadAsByteArrayAsync();
+                }
+                else
+                {
+                    var message = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Http status code: {response.StatusCode} message: {message}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"[Params Client] - GeneratePdfAsync failed: {ex}");
+                throw;
+            }
+
         }
 
         public async Task<ParamsModel> GetParams()
