@@ -1,46 +1,43 @@
 ﻿using ClosetUI.Models.Models;
 using ClosetUI.Models.Dtos;
+using System.Text.Json;
 
 namespace ClosetUI.Services;
 
 public class PartCalculationService : IPartCalculationService
 {
-    public Task<List<PartMeasu>> FindClosestSeriesAsync(List<PartMeasu> sortedList, int target)
-    {
-        throw new NotImplementedException();
-    }
+    private ParamsModel? _params { get; set; }
 
+    public async Task<ParamsModel> GetParams()
+    {
+        return _params;
+    }
     public async Task<ParamsModel> ProcessAsync(PartGeneratorDto parameters)
     {
         try
         {
-            // Mocking the Parts for the demonstration purpose since the `Ceed` method is not present in PartGeneratorDto.
-            // Ideally, the PartGeneratorDto should already have the Parts populated before this method is called.
-
-            // Convert PartGeneratorDto to Params object
+            // Convert DTO to domain model (ParamsModel)
             var paramsObj = ConvertToParams(parameters);
 
-            // Perform the calculations
-            await paramsObj.CalcHypotenuseAsync();
-            var addThicknessTasks = paramsObj.Parts.Select(part => part.AddBladeThicknessAsync(paramsObj.BladeThikness)).ToArray();
-            await Task.WhenAll(addThicknessTasks);
+            // Ensure parts are processed (e.g., blade thickness applied, hypotenuse calculated)
+            foreach (var part in paramsObj.Parts)
+            {
+                part.AddBladeThickness(paramsObj.BladeThickness);
+                part.CalcHypotenuse();
+            }
 
-            // Call the new function to calculate positions
-            paramsObj.CalculatePartPositions(paramsObj);
+            // Run fitting logic to organize parts
+            await paramsObj.Fitting(); // Assuming Fitting is async; if not, just call without await
 
-            paramsObj.FillAllWidths();
-            paramsObj.FillAllHeights();
-            paramsObj.FillAllHypotenuse();
-            paramsObj.AggrigWidth();
-            //paramsObj.AggrigHeight();
-            paramsObj.AggrigHypotenuse();
+            // At this point, paramsObj contains organized parts; 
+            // you can optionally prepare drawing data or return paramsObj for further processing
+            _params = paramsObj; // Storing processed params for other uses if needed
 
             return paramsObj;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-
-            throw new Exception("Failed to Prcess Calculations");
+            throw new Exception("Failed to process calculations: " + ex.Message);
         }
     }
 
@@ -51,7 +48,7 @@ public class PartCalculationService : IPartCalculationService
 
         return new ParamsModel
         {
-            BladeThikness = dto.BladeThickness,
+            BladeThickness = dto.BladeThickness,
             Direction = dto.Direction,
             TotalWidth = dto.TotalWidth,
             TotalHeight = dto.TotalHeight,
@@ -66,13 +63,13 @@ public class PartCalculationService : IPartCalculationService
 
         foreach (var part in parts)
         {
-            ClosetPart closetPart = new ClosetPart
+            ClosetPart closetPart = new()
             {
-                ID = part.Id,
+                ID = part.ID,
                 PartName = part.PartName,
                 PartWidth = part.PartWidth,
                 PartHeight = part.PartHeight,
-                PartQty = part.PartQty
+                PartQty = part.PartQty,
             };
 
             partsList.Add(closetPart);

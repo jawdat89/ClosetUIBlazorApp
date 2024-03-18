@@ -1,8 +1,12 @@
-﻿namespace ClosetUI.Models.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace ClosetUI.Models.Models;
 
 public class ClosetPart
 {
+    [JsonPropertyName("id")]
     public int ID { get; set; }
+    [JsonPropertyName("plateId")]
     public int PlateID { get; set; }
     public int X { get; set; }  // in mm   X on big wood plate
     public int Y { get; set; }  // in mm   Y on big wood plate
@@ -27,14 +31,14 @@ public class ClosetPart
         Hypotenuse = (int)Math.Ceiling(Math.Sqrt(Math.Pow(Wt, 2) + Math.Pow(Ht, 2)));
     }
 
-    public void AddBladeThickness(int bladeThikness)
+    public void AddBladeThickness(int bladeThickness)
     {
-        Wt = PartWidth + bladeThikness;
-        Ht = PartWidth + bladeThikness;
+        Wt = PartWidth + bladeThickness;
+        Ht = PartWidth + bladeThickness;
     }
 
-    public async Task AddBladeThicknessAsync(int bladeThikness)
+    public async Task AddBladeThicknessAsync(int bladeThickness)
     {
-        await Task.Run(() => AddBladeThickness(bladeThikness));
+        await Task.Run(() => AddBladeThickness(bladeThickness));
     }
 }

@@ -1,7 +1,6 @@
 ﻿using ClosetUI.Models.Dtos;
 using ClosetUI.Models.Models;
 using Microsoft.AspNetCore.Components;
-using System.Text.Json;
 using ClosetUI.Services;
 
 namespace ClosetUI.Components.Pages
@@ -33,12 +32,23 @@ namespace ClosetUI.Components.Pages
             {
                 Params = new PartGeneratorDto
                 {
-                    TotalWidth = 2200,
-                    TotalHeight = 4400,
+                    TotalWidth = 1220,
+                    TotalHeight = 2440,
                     BladeThickness = 3,
-                    Parts = [new PartInput()],
+                    Parts = new()
+                    {
+                        new () { ID = 1, PartName = "part1", PartWidth = 187, PartHeight = 764, PartQty = 4 },
+                        new () { ID = 2, PartName = "part2", PartWidth = 423, PartHeight = 488, PartQty = 2 },
+                        new () { ID = 3, PartName = "part3", PartWidth = 414, PartHeight = 575, PartQty = 3 },
+                        new () { ID = 4, PartName = "part4", PartWidth = 510, PartHeight = 650, PartQty = 4 },
+                        new () { ID = 5, PartName = "part5", PartWidth = 630, PartHeight = 651, PartQty = 5 },
+                        new () { ID = 6, PartName = "part6", PartWidth = 350, PartHeight = 450, PartQty = 6 },
+                        new () { ID = 7, PartName = "part7", PartWidth = 270, PartHeight = 603, PartQty = 7 },
+                        new () { ID = 8, PartName = "part8", PartWidth = 310, PartHeight = 520, PartQty = 8 },
+                        new () { ID = 9, PartName = "part9", PartWidth = 398, PartHeight = 967, PartQty = 1 }
+                    },
                     Direction = 1,
-                    HypotenuseType = 1
+                    HypotenuseType = 2
                 };
 
                 UpdateParamsPartsList(Params.Parts);
@@ -74,11 +84,11 @@ namespace ClosetUI.Components.Pages
                     //// Save jsonData to local storage
                     //await ManageParamsLocalStorageService.AddCollection(paramsResult);
 
-                    // Serialize paramsResult to JSON
-                    var jsonData = JsonSerializer.Serialize(paramsResult);
-
-                    // Navigate to the new page
-                    NavigationManager.NavigateTo($"/PartsRenderer?val={jsonData}");
+                    if (paramsResult != null)
+                    {
+                        // Navigate to the new page
+                        NavigationManager.NavigateTo("PartsRenderer");
+                    }
                 }
             }
             catch (Exception ex)
@@ -113,7 +123,7 @@ namespace ClosetUI.Components.Pages
 
         protected async Task DeletePart(PartInput partInput)
         {
-            var newParts = Params.Parts.Where(p => p.Id != partInput.Id).ToList();
+            var newParts = Params.Parts.Where(p => p.ID != partInput.ID).ToList();
 
             Params.Parts = newParts;
 

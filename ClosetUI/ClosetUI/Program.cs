@@ -1,10 +1,13 @@
 using ClosetUI.Components;
 using ClosetUI.Models.Locales;
+using ClosetUI.Models.Services;
+using ClosetUI.Models.Services.Interfaces;
 using ClosetUI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddScoped<IPartCalculationService, PartCalculationService>();
+builder.Services.AddSingleton<IPartCalculationService, PartCalculationService>();
+builder.Services.AddScoped<IBoardDrawingService, BoardDrawingService>();
 
 builder.Services.AddLocalization();
 
