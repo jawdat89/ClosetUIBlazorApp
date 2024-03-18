@@ -1,10 +1,12 @@
 using ClosetUI.Components;
 using ClosetUI.Models.Locales;
 using ClosetUI.Services;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddScoped<IPartCalculationService, PartCalculationService>();
+builder.Services.AddSingleton<IPartCalculationService, PartCalculationService>();
+builder.Services.AddScoped<IBoardService, BoardService>();
 
 builder.Services.AddLocalization();
 
@@ -52,5 +54,7 @@ app.MapRazorComponents<App>()
     .AddAdditionalAssemblies(typeof(ClosetUI.Client._Imports).Assembly);
 
 app.MapControllers();
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 app.Run();

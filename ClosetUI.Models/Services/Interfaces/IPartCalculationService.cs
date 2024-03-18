@@ -6,4 +6,6 @@ namespace ClosetUI.Services;
 public interface IPartCalculationService
 {
     Task<ParamsModel> ProcessAsync(PartGeneratorDto parameters);
+    Task<ParamsModel> GetParams();
+    Task<byte[]> GenerateAndDownloadPdf(ParamsModel paramsModel);
 }

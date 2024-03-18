@@ -6,9 +6,6 @@
 <HeadContent>
     <meta name="description" content="Carpentry Parts Generator, Parts Drawer"
 </HeadContent>
-<button @onclick="SaveCanvasAsImageAsync" class="btn btn-primary" style="z-index: 20;"><i class="fa-solid fa-download"></i></button>
-
-@* <h1 class="text-center">Parts Drawer</h1> *@
 
 <CanvasHelper @ref="CanvasHelper"
               CanvasResized="CanvasResized"
@@ -21,3 +18,18 @@
     <BECanvas Width="600" Height="400" @ref="CanvasReference"></BECanvas>
 
 </CanvasHelper>
+@if (ParamsResult != null)
+{
+    <div class="btn-group" role="group" aria-label="buttons-group">
+        <button @onclick="SaveCanvasAsImageAsync" class="btn btn-primary" style="z-index: 20;"><i class="fa-solid fa-download"></i></button>
+        <button @onclick="GeneratePdfAsync" class="btn btn-primary" style="z-index: 20;"><i class="fa-solid fa-file-pdf"></i></button>
+    </div>
+} 
+else if(ErrorMessage != null)
+{
+    <DisplayError ErrorMessage="ErrorMessage" />
+}
+else
+{
+    <DisplaySpinner />
+}

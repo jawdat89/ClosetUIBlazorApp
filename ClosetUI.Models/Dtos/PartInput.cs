@@ -1,19 +1,22 @@
-﻿namespace ClosetUI.Models.Dtos;
+﻿using System.Text.Json.Serialization;
+
+namespace ClosetUI.Models.Dtos;
 
 public class PartInput
 {
-    public int Id { get; set; }
+    [JsonPropertyName("id")]
+    public int ID { get; set; }
     public string PartName { get; set; } = string.Empty;
     public int PartWidth { get; set; }
     public int PartHeight { get; set; }
     public int PartQty { get; set; }
     public int Measure { get; set; }
 
-    private static int Incremental = 0;
+    private static int _incremental = 0;
 
     public PartInput()
     {
-        Id = Incremental++;
+        ID = _incremental++;
         PartName = "";
         PartWidth = 0;
         PartHeight = 0;

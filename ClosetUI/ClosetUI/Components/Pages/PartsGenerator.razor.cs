@@ -1,7 +1,6 @@
 ﻿using ClosetUI.Models.Dtos;
 using ClosetUI.Models.Models;
 using Microsoft.AspNetCore.Components;
-using System.Text.Json;
 using ClosetUI.Services;
 
 namespace ClosetUI.Components.Pages
@@ -12,14 +11,11 @@ namespace ClosetUI.Components.Pages
         public NavigationManager NavigationManager { get; set; }
         [Inject]
         public IPartCalculationService PartCalculationService { get; set; }
-        //[Inject]
-        //public IManageParamsLocalStorageService ManageParamsLocalStorageService { get; set; }
 
         public PartGeneratorDto Params { get; set; }
 
         public string ErrorMessage { get; set; }
 
-        [Parameter]
         public int LastIndex { get; set; } = -1;
 
         protected ParamsModel paramsResult { get; set; }
@@ -33,12 +29,12 @@ namespace ClosetUI.Components.Pages
             {
                 Params = new PartGeneratorDto
                 {
-                    TotalWidth = 2200,
-                    TotalHeight = 4400,
+                    TotalWidth = 1220,
+                    TotalHeight = 2440,
                     BladeThickness = 3,
-                    Parts = [new PartInput()],
+                    Parts = [new ()],
                     Direction = 1,
-                    HypotenuseType = 1
+                    HypotenuseType = 2
                 };
 
                 UpdateParamsPartsList(Params.Parts);
@@ -53,15 +49,6 @@ namespace ClosetUI.Components.Pages
             }
         }
 
-        //protected async override Task OnAfterRenderAsync(bool firstRender)
-        //{
-        //    if (firstRender)
-        //    {
-        //        // Clean the localStorage
-        //        await ManageParamsLocalStorageService.RemoveCollection();
-        //    }
-        //}
-
         protected async Task Calculate_Click(PartGeneratorDto partGeneratorDto)
         {
             try
@@ -71,14 +58,11 @@ namespace ClosetUI.Components.Pages
                 {
                     paramsResult = await PartCalculationService.ProcessAsync(partGeneratorDto);
 
-                    //// Save jsonData to local storage
-                    //await ManageParamsLocalStorageService.AddCollection(paramsResult);
-
-                    // Serialize paramsResult to JSON
-                    var jsonData = JsonSerializer.Serialize(paramsResult);
-
-                    // Navigate to the new page
-                    NavigationManager.NavigateTo($"/PartsRenderer?val={jsonData}");
+                    if (paramsResult != null)
+                    {
+                        // Navigate to the new page
+                        NavigationManager.NavigateTo("PartsRenderer");
+                    }
                 }
             }
             catch (Exception ex)
@@ -113,7 +97,7 @@ namespace ClosetUI.Components.Pages
 
         protected async Task DeletePart(PartInput partInput)
         {
-            var newParts = Params.Parts.Where(p => p.Id != partInput.Id).ToList();
+            var newParts = Params.Parts.Where(p => p.ID != partInput.ID).ToList();
 
             Params.Parts = newParts;
 
@@ -132,7 +116,7 @@ namespace ClosetUI.Components.Pages
 
         protected bool CheckIfDeleteDisabled()
         {
-            if (Params.Parts.Count() <= 1)
+            if (Params.Parts.Count <= 1)
                 return true;
             return false;
         }

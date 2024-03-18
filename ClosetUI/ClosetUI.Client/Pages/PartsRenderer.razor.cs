@@ -2,66 +2,62 @@ using Blazor.Extensions.Canvas.Canvas2D;
 using Blazor.Extensions;
 using ClosetUI.Models.Models;
 using Microsoft.AspNetCore.Components;
-using System.Text.Json;
 using System.Drawing;
+using ClosetUI.Services;
+using Microsoft.JSInterop;
 
 namespace ClosetUI.Client.Pages;
 
 public partial class PartsRenderer : ComponentBase
 {
-    private Size Size = new Size();
-    private double FPS;
-    private double ScaleFactor;
+    private Size _size = new();
+    private double _fPS;
+    private double _scaleFactor;
 
-    private double GlobalX = 850;
-    private double GlobalY = 50;
-    private bool isDragging = false;
-    private CanvasMouseArgs lastDragPosition;
+    private double _globalX = 350;
+    private double _globalY = 30;
+    private bool _isDragging = false;
+    private CanvasMouseArgs _lastDragPosition;
+
+    private const double InitialXOffset = 0; // Initial offset from the left edge
+    private const double InitialYOffset = 0; // Initial offset from the top edge
+    private const double BoardGap = 55; // Gap between each board
 
     protected Canvas2DContext Ctx;
     protected BECanvasComponent CanvasReference;
     protected CanvasHelper CanvasHelper;
 
-    //const string JsModulePath = "./Pages/PartsRenderer.razor.js";
+    [Inject]
+    protected IPartCalculationService ParamsClientService {  get; set; }
 
-    //[Inject]
-    //public IJSRuntime JsRuntime { get; set; }
+    [Inject]
+    protected IBoardService BoardService { get; set; }
 
-    //[Inject]
-    //public ILogger<PartsRenderer> Log { get; set; }
+    private Lazy<Task<IJSObjectReference>> _moduleTask;
 
-    //[Inject]
-    //public IManageParamsLocalStorageService ManageParamsLocalStorage { get; set; }
+    [Inject]
+    protected IJSRuntime _jsRuntime { get; set; }
 
-    //Lazy<Task<IJSObjectReference>> moduleTask;
+    protected ParamsModel? ParamsResult { get; set; }
 
-    public ParamsModel? ParamsResult { get; set; }
+    protected BoardDrawingData DrawingData { get; set; }
 
-    public string? ParamsJson { get; set; }
+    protected string? ErrorMessage { get; set; }
 
-    public string? ErrorMessage { get; set; }
-
-    // [Parameter]
-    [SupplyParameterFromQuery(Name = "val")]
-    public string? EncodedParams { get; set; }
-
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
     {
-        await Task.Delay(0);
-        if (!string.IsNullOrWhiteSpace(EncodedParams))
+        try
         {
-            try
+            var result = await ParamsClientService.GetParams();
+            if (result != null)
             {
-                // URL-decode the JSON string
-                var decodedJson = System.Net.WebUtility.UrlDecode(EncodedParams);
-
-                // Deserialize the JSON string to ParamsModel
-                ParamsResult = JsonSerializer.Deserialize<ParamsModel>(decodedJson);
+                ParamsResult = result;
+                DrawingData = await BoardService.PrepareDrawingData(ParamsResult);
             }
-            catch (Exception ex)
-            {
-                ErrorMessage = $"Error deserializing parameters: {ex.Message}";
-            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
         }
     }
 
@@ -69,41 +65,42 @@ public partial class PartsRenderer : ComponentBase
     {
         if (firstRender)
         {
+            // Load local JS file
+            // We need to specify the .js file path relative to this code
+            _moduleTask = new(() => _jsRuntime.InvokeAsync<IJSObjectReference>(
+                "import", "./Pages/PartsRenderer.razor.js").AsTask());
+
+            // Load the module
+            var module = await _moduleTask.Value;
+
             // BeCanvas
             Ctx = await CanvasReference.CreateCanvas2DAsync();
             // Initialize the helper
-            await CanvasHelper.Initialize();
+            if (CanvasHelper != null)
+            {
+                await CanvasHelper.Initialize();
+            }
 
             // If you need to apply a transformation such as zooming
-            ScaleFactor = 0.19; // Adjust as needed
-            await Ctx.SetTransformAsync(ScaleFactor, 0, 0, ScaleFactor, 0, 0);
-
-            //moduleTask = new(() => JsRuntime.InvokeAsync<IJSObjectReference>("import", JsModulePath).AsTask());
-
-            //if (ParamsResult == null)
-            //{
-            //    ParamsResult = await ManageParamsLocalStorage.GetCollection();
-            //}
-
-
-            //var module = await moduleTask.Value;
-
-            //await module.InvokeVoidAsync("initCanvas", DotNetObjectReference.Create(this));
+            _scaleFactor = 0.35; // Adjust as needed
+            if (Ctx != null)
+            {
+                await Ctx.SetTransformAsync(_scaleFactor, 0, 0, _scaleFactor, 0, 0);
+            }
         }
     }
-
 
     // BeCanvas Method
     public async Task RenderFrame(double fps)
     {
-        FPS = fps;
+        _fPS = fps;
 
         // Reset transformations before clearing to ensure the entire canvas is cleared
         await Ctx.SetTransformAsync(1, 0, 0, 1, 0, 0); // Set to identity matrix
-        await Ctx.ClearRectAsync(0, 0, Size.Width, Size.Height);
+        await Ctx.ClearRectAsync(0, 0, _size.Width, _size.Height);
 
         // Reapply transformations after clearing
-        await Ctx.SetTransformAsync(ScaleFactor, 0, 0, ScaleFactor, GlobalX, GlobalY);
+        await Ctx.SetTransformAsync(_scaleFactor, 0, 0, _scaleFactor, _globalX, _globalY);
 
         // Drawing the parts
         if (ParamsResult != null)
@@ -114,108 +111,110 @@ public partial class PartsRenderer : ComponentBase
 
     public void CanvasResized(Size size)
     {
-        Size = size;
+        _size = size;
     }
 
     // #region Mouse Methods
     void MouseDown(CanvasMouseArgs args)
     {
         // Start dragging
-        isDragging = true;
-        lastDragPosition = args; // Store the starting point of the drag
+        _isDragging = true;
+        _lastDragPosition = args; // Store the starting point of the drag
     }
 
     async Task MouseUp(CanvasMouseArgs args)
     {
         // End dragging
-        isDragging = false;
+        _isDragging = false;
 
         // Clear the entire canvas before drawing the new frame
-        await Ctx.ClearRectAsync(0, 0, Size.Width, Size.Height);
+        await Ctx.ClearRectAsync(0, 0, _size.Width, _size.Height);
     }
 
     void MouseMove(CanvasMouseArgs args)
     {
-        if (isDragging)
+        if (_isDragging)
         {
             // Calculate how much the mouse has moved since the last event
-            double deltaX = args.ClientX - lastDragPosition.ClientX;
-            double deltaY = args.ClientY - lastDragPosition.ClientY;
+            double deltaX = args.ClientX - _lastDragPosition.ClientX;
+            double deltaY = args.ClientY - _lastDragPosition.ClientY;
 
             // Update the global translation offsets
-            GlobalX += deltaX;
-            GlobalY += deltaY;
+            _globalX += deltaX;
+            _globalY += deltaY;
 
             // Update the last drag position
-            lastDragPosition = args;
+            _lastDragPosition = args;
         }
     }
 
     void MouseWheel(CanvasWheelArgs args)
     {
         var deltaScaleFactor = args.DeltaY < 0 ? 0.1 : -0.1;
-        ScaleFactor += deltaScaleFactor;
-        ScaleFactor = Math.Max(0.1, Math.Min(ScaleFactor, 10)); // Clamping
+        _scaleFactor += deltaScaleFactor;
+        _scaleFactor = Math.Max(0.1, Math.Min(_scaleFactor, 10)); // Clamping
     }
 
+    // #endregion Mouse Methods
+    // #region Events Methods
     protected async Task SaveCanvasAsImageAsync()
     {
         await CanvasHelper.downloadCanvasAsImage();
     }
-    // #endregion Mouse Methods
 
-    // #region Drawers
-    // Revised Method to Draw All Parts
-    private async Task DrawBoardsAndPartsAsync()
+    protected async Task GeneratePdfAsync()
     {
-        double currentX = 0, currentY = 0, maxHeightInRow = 0, boardOffsetX = 0;
-        var parts = ParamsResult.Parts;
-        double boardWidth = ParamsResult.TotalWidth;
-        double boardHeight = ParamsResult.TotalHeight;
-
-        int boardIndex = 0;
-
-        int boardsGap = 55;
-
-        // Loop through each part
-        foreach (var part in parts)
+        try
         {
-            for (int qty = 0; qty < part.PartQty; qty++)
+
+            var filecContenct = await ParamsClientService.GenerateAndDownloadPdf(ParamsResult);
+
+            if (filecContenct != null)
+            
             {
-                if (currentX + part.Wt > boardWidth)
-                {
-                    currentY += maxHeightInRow; // Move to next row
-                    currentX = 0;
-                    maxHeightInRow = 0;
-                }
-
-                if (currentY + part.Ht > boardHeight)
-                {
-                    // Draw dimensions for the current board before starting a new one
-                    await DrawBoardDimensionsAsync(boardOffsetX, 0, boardWidth, boardHeight, boardIndex);
-
-                    boardIndex++;
-
-                    boardOffsetX += boardWidth + boardsGap; // Start new board
-                    currentX = 0;
-                    currentY = 0;
-                    maxHeightInRow = 0;
-                }
-
-                string color = GenerateColorBySize(part.Wt);
-                await DrawPartAsync(currentX + boardOffsetX, currentY, color, part.Wt, part.Ht, part);
-
-                currentX += part.Wt;
-                maxHeightInRow = Math.Max(maxHeightInRow, part.Ht);
+                var fileName = $"ClosetUI PDF {DateTime.Now.ToString("yyyyMMdd")}";
+                await TriggerFileDownload(fileName, filecContenct);
             }
         }
+        catch (Exception ex) 
+        {
+            ErrorMessage = ex.Message;
+        }
 
-        // Ensure the last board's dimensions are also drawn
-        await DrawBoardDimensionsAsync(boardOffsetX, 0, boardWidth, boardHeight, boardIndex);
     }
 
-    // Modified to accept a ClosetPart parameter and match your provided JS function signature
-    private async Task DrawPartAsync(double currentX, double currentY, string color, double width, double height, ClosetPart part)
+    private async Task TriggerFileDownload(string fileName, byte[] fileContent)
+    {
+        var module = await _moduleTask.Value;
+
+        await module.InvokeVoidAsync("saveAsFile", fileName, fileContent);
+    }
+    // #endregion Events Methods
+    // #region Drawers
+    // Revised Method to Draw All Parts
+    protected async Task DrawBoardsAndPartsAsync()
+    {
+        if (DrawingData?.Boards == null) return;
+
+        double currentYOffset = InitialYOffset;
+
+        // Iterate through each board in the drawing data
+        for (int i = 0; i < DrawingData.Boards.Count; i++)
+        {
+            var board = DrawingData.Boards[i];
+            double currentXOffset = InitialXOffset + (BoardGap + ParamsResult.TotalWidth) * i;
+
+            // Draw each part in the current board with adjusted positions
+            foreach (var part in board.Parts)
+            {
+                await DrawPartAsync(part.X + currentXOffset, part.Y + currentYOffset, part.Color, part.Width, part.Height, part);
+            }
+
+            await DrawBoardDimensionsAsync(currentXOffset, 0, ParamsResult.TotalWidth, ParamsResult.TotalHeight, board.BoardIndex);
+        }
+    }
+
+    private async Task DrawPartAsync(double currentX, double currentY, string color, double width, double height, PartDrawingInfo part)
     {
         // Fill the part with the specified color
         await Ctx.SetFillStyleAsync(color);
@@ -233,17 +232,39 @@ public partial class PartsRenderer : ComponentBase
         await Ctx.SetFontAsync(font);
 
         // Prepare the text you want to draw
-        string text = $"{part.PartWidth}mm x {part.PartHeight}mm";
+        string text = $"{part.Width}mm x {part.Height}mm";
 
-        // Estimate the text width (may need adjustment based on the chosen font)
-        double textWidth = fontSize * text.Length / 2; // Rough approximation
+        if (width < 200)
+        {
+            // Adjustments for multi-line text
+            int lineHeight = fontSize + 4; // 4 is a line spacing value, adjust as needed
+            string[] words = text.Split('x');
+            string line1 = $"{words[0]}";
+            string line2 = $"x {words[1]}";
 
-        // Calculate the position to center the text within the part
-        double textX = currentX + (width + textWidth) / 2;
-        double textY = currentY + (height + fontSize) / 2; // Adjust for vertical centering
+            // Calculate the X position to center the text within the part
+            double textX = currentX + (width / 2) + 50; // Center the text
 
-        // Draw the text
-        await Ctx.FillTextAsync(text, textX, textY);
+            // Draw the first line
+            double textY1 = currentY + (height / 2) - lineHeight;
+            await Ctx.FillTextAsync(line1, textX, textY1);
+
+            // Draw the second line
+            double textY2 = currentY + (height / 2);
+            await Ctx.FillTextAsync(line2, textX, textY2);
+        }
+        else
+        {
+            // Estimate the text width (may need adjustment based on the chosen font)
+            double textWidth = fontSize * text.Length / 2; // Rough approximation
+
+            // Calculate the position to center the text within the part
+            double textX = currentX + (width + textWidth) / 2;
+            double textY = currentY + (height + fontSize) / 2; // Adjust for vertical centering
+
+            // Draw the text
+            await Ctx.FillTextAsync(text, textX, textY);
+        }
     }
 
     private async Task DrawBoardDimensionsAsync(double offsetX, double offsetY, double width, double height, int boardIndex)
@@ -254,7 +275,7 @@ public partial class PartsRenderer : ComponentBase
         await Ctx.StrokeRectAsync(offsetX, offsetY, width, height);
 
         // Prepare the board index text
-        string boardText = $"Board {boardIndex + 1}"; // +1 to make the index human-readable (starting from 1)
+        string boardText = $"Board {boardIndex}";
         int fontSize = 80; // Choose an appropriate font size
         await Ctx.SetFontAsync($"{fontSize}px Arial");
         await Ctx.SetFillStyleAsync("black");
@@ -265,32 +286,6 @@ public partial class PartsRenderer : ComponentBase
 
         // Draw the text
         await Ctx.FillTextAsync(boardText, textX, textY);
-    }
-
-
-    private string GenerateColorBySize(double size)
-    {
-        // Define your size range and corresponding hue range
-        double minSize = 10; // Example minimum size
-        double maxSize = 1000; // Example maximum size
-        int minHue = 0; // Start of hue range (red)
-        int maxHue = 260; // End of hue range (blue), avoiding the very bright/pale end
-
-        // Normalize size within its range to a [0, 1] scale
-        double normalizedSize = (size - minSize) / (maxSize - minSize);
-
-        // Clamp the normalized size to [0, 1] to ensure it's within the range
-        normalizedSize = Math.Max(0, Math.Min(1, normalizedSize));
-
-        // Map the normalized size to the hue range
-        int hue = (int)(minHue + (maxHue - minHue) * normalizedSize);
-
-        // Fixed saturation and lightness values to avoid too bright or white colors
-        int saturation = 75; // Saturation at 75% to ensure colorfulness
-        int lightness = 50; // Lightness at 50% to avoid too dark or too bright colors
-
-        // Return the HSL color string
-        return $"hsl({hue}, {saturation}%, {lightness}%)";
     }
     // #endregion Drawers
 }
