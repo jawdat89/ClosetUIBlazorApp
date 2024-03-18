@@ -15,7 +15,7 @@ public partial class PartsRenderer : ComponentBase
     private double _scaleFactor;
 
     private double _globalX = 350;
-    private double _globalY = 50;
+    private double _globalY = 30;
     private bool _isDragging = false;
     private CanvasMouseArgs _lastDragPosition;
 
@@ -90,7 +90,6 @@ public partial class PartsRenderer : ComponentBase
         }
     }
 
-
     // BeCanvas Method
     public async Task RenderFrame(double fps)
     {
@@ -156,6 +155,8 @@ public partial class PartsRenderer : ComponentBase
         _scaleFactor = Math.Max(0.1, Math.Min(_scaleFactor, 10)); // Clamping
     }
 
+    // #endregion Mouse Methods
+    // #region Events Methods
     protected async Task SaveCanvasAsImageAsync()
     {
         await CanvasHelper.downloadCanvasAsImage();
@@ -177,7 +178,6 @@ public partial class PartsRenderer : ComponentBase
         }
         catch (Exception ex) 
         {
-            // do nothingdf
             ErrorMessage = ex.Message;
         }
 
@@ -187,11 +187,9 @@ public partial class PartsRenderer : ComponentBase
     {
         var module = await _moduleTask.Value;
 
-        // Initialize
         await module.InvokeVoidAsync("saveAsFile", fileName, fileContent);
     }
-    // #endregion Mouse Methods
-
+    // #endregion Events Methods
     // #region Drawers
     // Revised Method to Draw All Parts
     protected async Task DrawBoardsAndPartsAsync()

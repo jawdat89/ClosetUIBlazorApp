@@ -27,7 +27,7 @@ namespace ClosetUI.Services
                 {
                     if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
                     {
-                        return default(byte[]);
+                        return default;
                     }
 
                     // Directly return the byte array content if successful

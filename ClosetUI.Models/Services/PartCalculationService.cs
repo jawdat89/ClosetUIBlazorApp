@@ -134,11 +134,6 @@ public class PartCalculationService : IPartCalculationService
                                 column.Item().Padding(10);
                             }
                         } 
-                        else
-                        {
-                            // do nothing
-
-                        }
                     }
                 });
 
@@ -164,7 +159,7 @@ public class PartCalculationService : IPartCalculationService
         var pdfData = new PDFData
         {
             Title = "Board Layout",
-            Boards = new List<BoardPDFInfo>()
+            Boards = []
         };
 
         var boardWidth = paramsModel.TotalWidth;
@@ -179,10 +174,10 @@ public class PartCalculationService : IPartCalculationService
         while (fitWidthsCopy.Count > 0)
         {
             var row = fitWidthsCopy.First();
-            var boardPDFInfo = new BoardPDFInfo
+            BoardPDFInfo boardPDFInfo = new()
             {
                 BoardIndex = boardIndex,
-                Parts = new List<PartPDFInfo>()
+                Parts = []
             };
 
             foreach (var partMeasure in row)
@@ -208,7 +203,7 @@ public class PartCalculationService : IPartCalculationService
                     boardPDFInfo = new BoardPDFInfo
                     {
                         BoardIndex = boardIndex,
-                        Parts = new List<PartPDFInfo>()
+                        Parts = []
                     };
                     xPosition = 0;
                     yPosition = 0;
