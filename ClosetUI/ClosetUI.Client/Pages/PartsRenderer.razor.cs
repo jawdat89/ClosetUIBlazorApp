@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components;
 using System.Drawing;
 using ClosetUI.Services;
 using Microsoft.JSInterop;
+using ClosetUI.Models.Services;
 
 namespace ClosetUI.Client.Pages;
 
@@ -33,10 +34,12 @@ public partial class PartsRenderer : ComponentBase
     [Inject]
     protected IBoardService BoardService { get; set; }
 
-    private Lazy<Task<IJSObjectReference>> _moduleTask;
+    [Inject]
+    protected IPDFService PDFService { get; set; }
 
     [Inject]
     protected IJSRuntime _jsRuntime { get; set; }
+    private Lazy<Task<IJSObjectReference>> _moduleTask;
 
     protected ParamsModel? ParamsResult { get; set; }
 
@@ -167,7 +170,7 @@ public partial class PartsRenderer : ComponentBase
         try
         {
 
-            var filecContenct = await ParamsClientService.GenerateAndDownloadPdf(ParamsResult);
+            var filecContenct = await PDFService.GenerateAndDownloadPdf(ParamsResult);
 
             if (filecContenct != null)
             
