@@ -1,12 +1,13 @@
 using ClosetUI.Components;
 using ClosetUI.Models.Locales;
+using ClosetUI.Models.Services;
 using ClosetUI.Services;
-using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<IPartCalculationService, PartCalculationService>();
 builder.Services.AddScoped<IBoardService, BoardService>();
+builder.Services.AddSingleton<IPDFService, PDFService>();
 
 builder.Services.AddLocalization();
 
@@ -23,7 +24,7 @@ builder.Services.AddControllers()
 
 builder.Services.AddScoped(sp => new HttpClient
 {
-    BaseAddress = new Uri(builder.Configuration["AppSettings:GeneratePDFAzureFunctionURL"])
+    BaseAddress = new Uri(builder.Configuration["GeneratePDFAzureFunctionURL"])
 });
 
 var app = builder.Build();
@@ -59,7 +60,5 @@ app.MapRazorComponents<App>()
     .AddAdditionalAssemblies(typeof(ClosetUI.Client._Imports).Assembly);
 
 app.MapControllers();
-
-QuestPDF.Settings.License = LicenseType.Community;
 
 app.Run();
