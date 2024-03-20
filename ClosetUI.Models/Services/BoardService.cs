@@ -59,8 +59,10 @@ public class BoardService : IBoardService
                     ID = part.ID,
                     X = xPosition,
                     Y = yPosition,
-                    Width = part.Wt,
-                    Height = part.Ht,
+                    Width = part.PartWidth,
+                    Height = part.PartHeight,
+                    Wt = part.Wt,
+                    Ht = part.Ht,
                     Color = GenerateColorBySize(part.Wt)
                 });
 
