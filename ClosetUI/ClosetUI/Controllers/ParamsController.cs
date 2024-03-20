@@ -2,7 +2,10 @@
 using ClosetUI.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System.Net;
+using System.Text;
+using System.Text.Json.Serialization;
 
 namespace ClosetUI.Controllers
 {
@@ -11,10 +14,12 @@ namespace ClosetUI.Controllers
     public class ParamsController : ControllerBase
     {
         private readonly IPartCalculationService _partsService;
+        private readonly HttpClient _httpClient;
 
-        public ParamsController(IPartCalculationService PartsService)
+        public ParamsController(IPartCalculationService PartsService, HttpClient httpClient)
         {
             _partsService = PartsService;
+            _httpClient = httpClient;
         }
 
         [HttpGet]
@@ -36,8 +41,30 @@ namespace ClosetUI.Controllers
         {
             try
             {
-                var pdfBytes = await _partsService.GenerateAndDownloadPdf(paramsModel);
-                return File(pdfBytes, "application/pdf", "PartsLayout.pdf");
+                //var pdfBytes = await _partsService.GenerateAndDownloadPdf(paramsModel);
+
+                using HttpRequestMessage request = new(HttpMethod.Post, _httpClient.BaseAddress);
+
+                var json = JsonConvert.SerializeObject(paramsModel);
+
+                using StringContent stringContent = new(json, Encoding.UTF8, "application/json");
+
+                request.Content = stringContent;
+
+                using HttpResponseMessage response = await _httpClient.SendAsync(
+                    request,
+                    HttpCompletionOption.ResponseHeadersRead
+                    );
+
+                if (response.IsSuccessStatusCode == true)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<StreamDto>();
+                    
+                    return File(result.Content, result.ContentType, "PartsLayout.pdf");
+                }
+
+                return StatusCode(StatusCodes.Status500InternalServerError, "filed to generate file");
+
             }
             catch (Exception ex)
             {

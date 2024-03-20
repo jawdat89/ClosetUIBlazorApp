@@ -21,6 +21,11 @@ builder.Services.AddControllers()
         options.DataAnnotationLocalizerProvider = (type, factory) => factory.Create(typeof(PartGeneratorDtoResource));
     });
 
+builder.Services.AddScoped(sp => new HttpClient
+{
+    BaseAddress = new Uri(builder.Configuration["AppSettings:GeneratePDFAzureFunctionURL"])
+});
+
 var app = builder.Build();
 
 string[] supportedCultures = ["en", "he"];
