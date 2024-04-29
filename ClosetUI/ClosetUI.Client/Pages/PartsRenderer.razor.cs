@@ -210,7 +210,7 @@ public partial class PartsRenderer : ComponentBase
             // Draw each part in the current board with adjusted positions
             foreach (var part in board.Parts)
             {
-                await DrawPartAsync(part.X + currentXOffset, part.Y + currentYOffset, part.Color, part.Width, part.Height, part);
+                await DrawPartAsync(part.X + currentXOffset, part.Y + currentYOffset, part.Color, part.Wt, part.Ht, part);
             }
 
             await DrawBoardDimensionsAsync(currentXOffset, 0, ParamsResult.TotalWidth, ParamsResult.TotalHeight, board.BoardIndex);
@@ -237,7 +237,7 @@ public partial class PartsRenderer : ComponentBase
         // Prepare the text you want to draw
         string text = $"{part.Width}mm x {part.Height}mm";
 
-        if (width < 200)
+        if (width < 250)
         {
             // Adjustments for multi-line text
             int lineHeight = fontSize + 4; // 4 is a line spacing value, adjust as needed
@@ -246,7 +246,7 @@ public partial class PartsRenderer : ComponentBase
             string line2 = $"x {words[1]}";
 
             // Calculate the X position to center the text within the part
-            double textX = currentX + (width / 2) + 50; // Center the text
+            double textX = currentX + (width / 2) + 60; // Center the text
 
             // Draw the first line
             double textY1 = currentY + (height / 2) - lineHeight;
