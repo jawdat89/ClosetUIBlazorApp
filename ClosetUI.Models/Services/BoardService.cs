@@ -11,74 +11,66 @@ public class BoardService : IBoardService
         double boardWidth = paramsModel.TotalWidth; // The maximum width a board can have.
         double boardHeight = paramsModel.TotalHeight; // The maximum height a board can have.
 
-        int boardIndex = 1; // Initialize boardIndex to start with the first board.
-        double xPosition = 0, yPosition = 0; // Track the current X and Y position on the board for placing parts.
-        double currentRowMaxHeight = 0; // Keep track of the maximum part height in the current row to calculate the starting Y position of the next row.
+        int boardIndex = 1;
+        double xPosition = 0, yPosition = 0;
+        double currentRowMaxHeight = 0;
 
         // Initialize the first board.
         Board currentBoard = new Board { BoardIndex = boardIndex };
 
-        // Create a deep copy of FitWidths to safely modify it during iteration.
-        var fitWidthsCopy = new List<List<PartMeasu>>(paramsModel.FitWidths);
-
-        // Process each row in FitWidths until all have been processed.
-        while (fitWidthsCopy.Count > 0)
+        // Process each group from FitHeights for optimal vertical fitting.
+        foreach (var group in paramsModel.FitHeights)
         {
-            var row = fitWidthsCopy.First();
-            foreach (var partMeasure in row)
+            foreach (var partMeasure in group)
             {
-                // Find the part in paramsModel based on partMeasure's ID.
                 ClosetPart part = paramsModel.Parts.FirstOrDefault(p => p.ID == partMeasure.ID);
-                if (part == null) continue; // Skip this iteration if the part wasn't found.
+                if (part == null) continue;
 
-                // Determine if a new row or new board is needed based on the part's dimensions.
-                if (xPosition + part.Wt > boardWidth || yPosition + part.Ht > boardHeight)
+                // Iterate over each part based on its quantity.
+                for (int qty = 0; qty < part.PartQty; qty++)
                 {
+                    // Check if a new row or new board is needed.
                     if (xPosition + part.Wt > boardWidth)
                     {
-                        // Start a new row on the current board.
                         yPosition += currentRowMaxHeight;
-                        xPosition = 0; // Reset xPosition for the new row
-                        currentRowMaxHeight = 0; // Reset the row height tracker
+                        xPosition = 0;
+                        currentRowMaxHeight = 0;
                     }
 
                     if (yPosition + part.Ht > boardHeight)
                     {
-                        // Start a new board if the part exceeds the board height.
                         drawingData.Boards.Add(currentBoard);
-                        boardIndex++; // Increment board index for a new board
+                        boardIndex++;
                         currentBoard = new Board { BoardIndex = boardIndex };
-                        xPosition = 0; // Reset positions for the new board
+                        xPosition = 0;
                         yPosition = 0;
+                        currentRowMaxHeight = 0;
                     }
+
+                    currentBoard.Parts.Add(new PartDrawingInfo
+                    {
+                        ID = part.ID,
+                        X = xPosition,
+                        Y = yPosition,
+                        Width = part.PartWidth,
+                        Height = part.PartHeight,
+                        Wt = part.Wt,
+                        Ht = part.Ht,
+                        Color = GenerateColorBySize(part.Wt)
+                    });
+
+                    xPosition += part.Wt;
+                    currentRowMaxHeight = Math.Max(currentRowMaxHeight, part.Ht);
                 }
-
-                // Place the part on the current board at the calculated position.
-                currentBoard.Parts.Add(new PartDrawingInfo
-                {
-                    ID = part.ID,
-                    X = xPosition,
-                    Y = yPosition,
-                    Width = part.PartWidth,
-                    Height = part.PartHeight,
-                    Wt = part.Wt,
-                    Ht = part.Ht,
-                    Color = GenerateColorBySize(part.Wt)
-                });
-
-                // Update position trackers for placing the next part.
-                xPosition += part.Wt;
-                currentRowMaxHeight = Math.Max(currentRowMaxHeight, part.Ht);
             }
 
-            // Remove the processed row and reset trackers for the next row.
-            fitWidthsCopy.RemoveAt(0);
+            // Reset position for next group.
             xPosition = 0;
             yPosition += currentRowMaxHeight;
             currentRowMaxHeight = 0;
         }
 
-        // Add the last processed board to drawing data if it contains any parts.
+        // Add the last processed board if it contains any parts.
         if (currentBoard.Parts.Count != 0)
         {
             drawingData.Boards.Add(currentBoard);

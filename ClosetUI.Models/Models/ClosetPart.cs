@@ -34,7 +34,7 @@ public class ClosetPart
     public void AddBladeThickness(int bladeThickness)
     {
         Wt = PartWidth + bladeThickness;
-        Ht = PartWidth + bladeThickness;
+        Ht = PartHeight + bladeThickness;
     }
 
     public async Task AddBladeThicknessAsync(int bladeThickness)

@@ -74,11 +74,14 @@ namespace ClosetUI.Components.Pages
 
         protected async Task AddPart(PartInput partInput)
         {
-            var newPart = new PartInput();
-            newPart.PartName = partInput.PartName;
-            newPart.PartWidth = partInput.PartWidth;
-            newPart.PartHeight = partInput.PartHeight;
-            newPart.PartQty = partInput.PartQty;
+            PartInput newPart = new()
+            {
+                PartName = partInput.PartName,
+                PartWidth = partInput.PartWidth,
+                PartHeight = partInput.PartHeight,
+                PartQty = partInput.PartQty
+            };
+
 
             // Add Input Part to the list
             Params.Parts.Append(newPart);
