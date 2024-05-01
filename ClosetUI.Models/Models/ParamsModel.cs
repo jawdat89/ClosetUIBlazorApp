@@ -38,16 +38,9 @@ public class ParamsModel
     {
         await Task.Run(() =>
         {
-            //Ceed();
-            CalcHypotenuse();
-            Parts.ForEach(x => x.AddBladeThickness(BladeThickness));
-            Parts.ForEach(x => x.CalcHypotenuse());
             FillAllWidths();
             FillAllHeights();
-            FillAllHypotenuse();
-            AggrigWidth();
-            AggrigHeight();
-            AggrigHypotenuse();
+            ProcessAggregation();
         });
     }
 
@@ -85,29 +78,31 @@ public class ParamsModel
     {
         try
         {
-            // Order parts by width and then by height to prepare for width-based aggregation.
-            List<ClosetPart> lcps
-                = Parts.OrderBy(x => x.Wt).ThenBy(x => x.PartHeight).ToList();
+            //// Order parts by width and then by height to prepare for width-based aggregation.
+            //List<ClosetPart> lcps
+            //    = Parts.OrderBy(x => x.Wt).ThenBy(x => x.Ht).ToList();
 
 
-            // Initially, a grouping by part name was considered to ensure uniqueness, but it is not utilized in the final approach.
-            // This commented-out code can be removed or adapted if the grouping logic is needed in future revisions.
-            /*
-            AllWidths = lcps.GroupBy(t => t.PartName)
-                            .Select(g => new PartMeasu
-                            {
-                                ID = g.FirstOrDefault().ID,
-                                Measure = g.FirstOrDefault().Wt
-                            }).OrderBy(x => x.Measure).ToList();
-            */
+            //// Initially, a grouping by part name was considered to ensure uniqueness, but it is not utilized in the final approach.
+            //// This commented-out code can be removed or adapted if the grouping logic is needed in future revisions.
+            ///*
+            //AllWidths = lcps.GroupBy(t => t.PartName)
+            //                .Select(g => new PartMeasu
+            //                {
+            //                    ID = g.FirstOrDefault().ID,
+            //                    Measure = g.FirstOrDefault().Wt
+            //                }).OrderBy(x => x.Measure).ToList();
+            //*/
 
-            // Populate the AllWidths list with each part's width, ensuring parts are sorted by their width.
-            // This makes the AllWidths list a straightforward representation of all parts' widths, ready for further processing.
-            AllWidths = lcps.Select(x => new PartMeasu
-            {
-                ID = x.ID,
-                Measure = x.Wt
-            }).OrderBy(x => x.Measure).ToList();
+            //// Populate the AllWidths list with each part's width, ensuring parts are sorted by their width.
+            //// This makes the AllWidths list a straightforward representation of all parts' widths, ready for further processing.
+            //AllWidths = lcps.Select(x => new PartMeasu
+            //{
+            //    ID = x.ID,
+            //    Measure = x.Wt
+            //}).OrderBy(x => x.Measure).ToList();
+
+            AllWidths = Parts.OrderBy(p => p.Wt).Select(p => new PartMeasu { ID = p.ID, Measure = p.Wt }).ToList();
         }
         catch (Exception)
         {
@@ -120,20 +115,22 @@ public class ParamsModel
     {
         try
         {
-            List<ClosetPart> lcps
-                = this.Parts.OrderBy(x => x.Ht).ThenBy(x => x.PartHeight).ToList();
-            AllHeights = lcps.GroupBy(t => t.PartName)
-                                     .Select(g => new PartMeasu
-                                     {
-                                         ID = g.FirstOrDefault().ID,
-                                         Measure = g.FirstOrDefault().Ht
-                                     }).OrderBy(x => x.Measure).ToList();
+            //List<ClosetPart> lcps
+            //    = this.Parts.OrderBy(x => x.Ht).ThenBy(x => x.Wt).ToList();
+            //AllHeights = lcps.GroupBy(t => t.PartName)
+            //                         .Select(g => new PartMeasu
+            //                         {
+            //                             ID = g.FirstOrDefault().ID,
+            //                             Measure = g.FirstOrDefault().Ht
+            //                         }).OrderBy(x => x.Measure).ToList();
 
-            AllHeights = lcps.Select(x => new PartMeasu
-            {
-                ID = x.ID,
-                Measure = x.Ht
-            }).OrderBy(x => x.Measure).ToList();
+            //AllHeights = lcps.Select(x => new PartMeasu
+            //{
+            //    ID = x.ID,
+            //    Measure = x.Ht
+            //}).OrderBy(x => x.Measure).ToList();
+
+            AllHeights = Parts.OrderBy(p => p.Ht).Select(p => new PartMeasu { ID = p.ID, Measure = p.Ht }).ToList();
         }
         catch (Exception)
         {
@@ -165,6 +162,27 @@ public class ParamsModel
         {
             throw new Exception("Failed to Fill All Hypotenuse");
         }
+    }
+
+    public void ProcessAggregation()
+    {
+        FitWidths = AggregateDimensions(AllWidths, TotalWidth);
+        FitHeights = AggregateDimensions(AllHeights, TotalHeight);
+    }
+
+    private List<List<PartMeasu>> AggregateDimensions(List<PartMeasu> measurements, int targetDimension)
+    {
+        List<List<PartMeasu>> result = []; // new List<List<PartMeasu>>();
+        List<PartMeasu> remainingMeasurements = new(measurements); // new List<PartMeasu>(measurements);
+
+        while (remainingMeasurements.Count != 0)
+        {
+            List<PartMeasu> group = FindClosestSeries(remainingMeasurements, targetDimension);
+            result.Add(group);
+            remainingMeasurements = remainingMeasurements.Where(m => !group.Any(g => g.ID == m.ID)).ToList();
+        }
+
+        return result;
     }
 
     public List<List<PartMeasu>> AggrigWidth()
@@ -265,60 +283,17 @@ public class ParamsModel
         }
     }
 
-    public void CalculatePartPositions(ParamsModel p)
+    /// <summary>
+    /// Finds the closest series of measurements that fit within the target dimension.
+    /// </summary>
+    /// <param name="sortedList">Sorted list of measurements.</param>
+    /// <param name="target">Target dimension for the aggregate group.</param>
+    /// <returns>A list of measurements forming a close series.</returns>
+    private List<PartMeasu> FindClosestSeries(List<PartMeasu> measurements, int targetDimension)
     {
-        // This example assumes FitWidths or FitHeights contain lists of parts grouped by best fit
-        // Let's say we decide to use FitWidths for horizontal arrangement and FitHeights for vertical if needed
-
-        int currentX = 0, currentY = 0;
-        int maxHeightInRow = 0;
-
-        // Example of iterating through FitWidths for horizontal arrangement
-        foreach (var group in p.FitWidths)
-        {
-            foreach (var partMeasu in group)
-            {
-                ClosetPart part = p.Parts.FirstOrDefault(cp => cp.ID == partMeasu.ID);
-                if (part != null)
-                {
-                    if (currentX + part.Wt > p.TotalWidth)
-                    {
-                        // Move to the next row
-                        currentY += maxHeightInRow;
-                        currentX = 0;
-                        maxHeightInRow = 0;
-                    }
-
-                    // Assuming part X and Y are to be set
-                    part.X = currentX;
-                    part.Y = currentY;
-
-                    currentX += part.Wt;
-                    maxHeightInRow = Math.Max(maxHeightInRow, part.Ht);
-
-                    // Check if the current Y position exceeds the total height, handle accordingly
-                    if (currentY + maxHeightInRow > p.TotalHeight)
-                    {
-                        // Exceeded material height, handle according to your requirements
-                        break;
-                    }
-                }
-            }
-        }
+        // This method needs a correct implementation based on your fitting logic
+        return measurements.TakeWhile(m => (targetDimension -= m.Measure) >= 0).ToList();
     }
-
-    static List<PartMeasu> FindClosestSeries(List<PartMeasu> sortedList, int target)
-    {
-        List<PartMeasu> currentSeries = [];
-        List<PartMeasu> bestSeries = [];
-        int currentSum = 0;
-        int bestSum = 0;
-
-        FindClosestSeriesHelper(sortedList, target, 0, currentSeries, ref currentSum, ref bestSeries, ref bestSum);
-
-        return bestSeries;
-    }
-
     static void FindClosestSeriesHelper(List<PartMeasu> sortedList, int target, int index, List<PartMeasu> currentSeries, ref int currentSum, ref List<PartMeasu> bestSeries, ref int bestSum)
     {
         if (currentSum <= target && currentSum > bestSum)
