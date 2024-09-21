@@ -44,6 +44,7 @@ dotnet restore
 `bash
 dotnet run
 `
+Or use MS Visual Studio
 
 ## Usage
 Once the application is running, you can access it in your web browser at `http://localhost:5000`. Use the interface to input the dimensions of your MDF boards and the required pieces. The app will generate an optimized cutting plan.
